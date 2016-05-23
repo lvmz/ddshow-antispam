@@ -23,7 +23,8 @@ lazy val jarTopack =   Seq(
   "org.wltea.analyzer" % "ik-analyzer" % "3.2.8",
   "com.alibaba" % "druid" % "1.0.11",
   "mysql" % "mysql-connector-java" % "5.1.18",
-"org.apache.spark" %% "spark-streaming-kafka" % "1.5.2"
+  "com.belerweb" % "pinyin4j" % "2.5.0",
+  "org.apache.spark" %% "spark-streaming-kafka" % "1.5.2"
 )
 
 assemblyMergeStrategy in assembly := {

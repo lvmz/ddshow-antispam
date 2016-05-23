@@ -4,10 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.youku.ddshow.antispam.model.PropertiesType;
-import com.youku.ddshow.antispam.utils.BysJava2;
-import com.youku.ddshow.antispam.utils.CalendarUtil;
-import com.youku.ddshow.antispam.utils.Database;
-import com.youku.ddshow.antispam.utils.LaifengWordAnalyzer;
+import com.youku.ddshow.antispam.utils.*;
 import org.apache.spark.Accumulator;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
@@ -43,6 +40,7 @@ public class BayesKafkaWorkStreamV2 {
     private static final  int timeInteval = 1800;
     private static final  int contentPv = 10;
     private static final  int entityPv = 5;
+    private static final  long newCommenterId = 910000000;
     private static Map<String, Integer> concurrentHashMap = new ConcurrentHashMap<String, Integer>();
     private static  Database _db = null;
     private BayesKafkaWorkStreamV2() {
@@ -123,6 +121,23 @@ public class BayesKafkaWorkStreamV2 {
             return false;
         }
     }
+
+    public  static boolean isNewUser(String commenterId)
+    {
+        Long id = 0L;
+        try{
+            id =  Long.parseLong(commenterId);
+            if(id>newCommenterId)
+            {
+                return  true;
+            }
+          }catch ( Exception e)
+          {
+              e.printStackTrace();
+          }
+        return  false;
+    }
+
     public static void main(String[] args) {
         if (args.length < 4) {
             System.err.println("Usage: BayesKafkaWorkStream <zkQuorum> <group> <topics> <numThreads>");
@@ -219,6 +234,26 @@ public class BayesKafkaWorkStreamV2 {
                                 Integer label =  r.getInt(1);
 
                                 Double result =  loadedModel.predict(features);
+
+                                if(NickNameFilter.isSpamNickName(user_name)&&isNewUser(commenterId))
+                                {
+
+                                    System.out.println("疑似垃圾评论昵称");
+                                    synchronized(_db){
+                                        _db.execute(String.format("insert into t_result_ugc_comment_antispam_highpv (commenterId,ip,device_token,user_name,commentId,content,stat_time,user_level) values ('%s','%s','%s','%s','%s','%s','%s','%s');"
+                                                ,commenterId, ip, token,  user_name+"_spam", commentId,
+                                                content,CalendarUtil.getDetailDateFormat(Long.parseLong(timestamp)),userLevel));
+
+                                        if(userLevel.equals("0"))
+                                        {
+                                            _db.execute(String.format("insert into t_result_ugc_comment_antispam (commenterId,ip,device_token,user_name,commentId,content,stat_time,user_level) values ('%s','%s','%s','%s','%s','%s','%s','%s');"
+                                                    ,commenterId, ip, token,  user_name, commentId,
+                                                    content,CalendarUtil.getDetailDateFormat(Long.parseLong(timestamp)),userLevel));
+                                        }
+                                    }
+                                }
+
+
                                 if(result.shortValue()==0)
                                 {
                                     System.out.println("这是条广告！！");
