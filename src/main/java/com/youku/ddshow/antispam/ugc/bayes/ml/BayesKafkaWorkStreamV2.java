@@ -143,8 +143,8 @@ public class BayesKafkaWorkStreamV2 {
             System.err.println("Usage: BayesKafkaWorkStream <zkQuorum> <group> <topics> <numThreads>");
             System.exit(1);
         }
-        _db  =  new Database(PropertiesType.DDSHOW_STAT_ONLINE);
-        SparkConf sparkConf = new SparkConf().setAppName("BayesKafkaWorkStream").setExecutorEnv("file.encoding","UTF-8");
+        _db  =  new Database(PropertiesType.DDSHOW_STAT_TEST);
+        SparkConf sparkConf = new SparkConf().setAppName("BayesKafkaWorkStream").setExecutorEnv("file.encoding","UTF-8").setMaster("local[8]");
         // Create the context with a 1 second batch size
         JavaStreamingContext jssc = new JavaStreamingContext(sparkConf, new Duration(2000));
         final Accumulator<Integer> At =  jssc.sc().accumulator(0); //累加器
