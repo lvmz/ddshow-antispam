@@ -63,7 +63,7 @@ public final class JavaKafkaWordCount {
       System.exit(1);
     }
 
-    SparkConf sparkConf = new SparkConf().setAppName("JavaKafkaWordCount").setMaster("local[8]");
+    SparkConf sparkConf = new SparkConf().setAppName("JavaKafkaWordCount");
     // Create the context with a 1 second batch size
     JavaStreamingContext jssc = new JavaStreamingContext(sparkConf, new Duration(2000));
 
