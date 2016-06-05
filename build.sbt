@@ -9,6 +9,10 @@ version := "1.0"
 scalaVersion := "2.10.4"
 
 libraryDependencies += "org.apache.spark" %% "spark-assembly" % "1.5.2" % "provided"
+
+//libraryDependencies +=  "org.apache.spark" %% "spark-streaming-kafka" % "1.5.2"
+
+
 //libraryDependencies += "org.apache.spark" %% "spark-assembly" % "1.5.2"
 
 
@@ -24,14 +28,20 @@ lazy val jarTopack =   Seq(
   "com.alibaba" % "druid" % "1.0.11",
   "mysql" % "mysql-connector-java" % "5.1.18",
   "com.belerweb" % "pinyin4j" % "2.5.0",
+  "org.apache.hbase" % "hbase-client" % "0.98.4-hadoop2",
+  "org.apache.hbase" % "hbase-common" % "0.98.4-hadoop2",
+  "org.apache.spark" %% "spark-streaming-kafka-mq" % "1.6.1",
   "org.apache.spark" %% "spark-streaming-kafka" % "1.5.2"
 )
 
 assemblyMergeStrategy in assembly := {
   case PathList("org", "apache", "spark", "unused", "UnusedStubClass.class")
   => MergeStrategy.first
+  case PathList("org", "apache","commons","collections", xs @ _*)         => MergeStrategy.first
+  case PathList("org", "apache","spark","streaming", "kafka",xs @ _*)         => MergeStrategy.first
   case x => (assemblyMergeStrategy in assembly).value(x)
 }
+
 
 
 lazy val commonSettings = Seq(
