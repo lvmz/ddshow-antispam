@@ -32,7 +32,10 @@ import java.util.regex.Pattern;
 /**
  * Created by dongjian on 2016/4/22.
  *
- * 贝叶斯分类器接kafka
+ * 贝叶斯分类器监听kafka实时过滤垃圾评论
+ * 反垃圾策略主要分为两部分
+ * 1、是一个贝叶斯文本分类器进行判断，需要定时更新模型
+ * 2、是一个频次策略，如果1个小时内某id给超过三个以上主播留言超过十条，被视作在发垃圾评论
  */
 public class BayesKafkaWorkStreamV2 {
     public  static NaiveBayesModel loadedModel = null;
@@ -140,11 +143,12 @@ public class BayesKafkaWorkStreamV2 {
 
     public static void main(String[] args) {
         if (args.length < 4) {
-            System.err.println("Usage: BayesKafkaWorkStream <zkQuorum> <group> <topics> <numThreads>");
+            System.err.println("Usage: BayesKafkaWorkStreamV2 <zkQuorum> <group> <topics> <numThreads> <modelpath>");
+            System.err.println("For Example: BayesKafkaWorkStreamV2 10.100.47.142:2181,10.100.47.105:2181,10.100.47.103:2181 test laifengtest_ugc 8 D:\\文本分类\\ugc\\ugcAntispamModel5 ");
             System.exit(1);
         }
         _db  =  new Database(PropertiesType.DDSHOW_STAT_TEST);
-        SparkConf sparkConf = new SparkConf().setAppName("BayesKafkaWorkStream").setExecutorEnv("file.encoding","UTF-8").setMaster("local[8]");
+        SparkConf sparkConf = new SparkConf().setAppName("BayesKafkaWorkStreamV2").setExecutorEnv("file.encoding","UTF-8").setMaster("local[8]");
         // Create the context with a 1 second batch size
         JavaStreamingContext jssc = new JavaStreamingContext(sparkConf, new Duration(2000));
         final Accumulator<Integer> At =  jssc.sc().accumulator(0); //累加器
