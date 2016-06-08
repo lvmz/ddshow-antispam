@@ -389,7 +389,7 @@ public class HbaseUtils {
 		}
 		statDate = "2016-05-25";
 		//String rowkey = modStr + "_" + roomId + "_" + statDate;
-		String rowkey ="04_4_2016-06-03";
+		String rowkey ="05_5_2016-06-08";
 		//System.out.println("04_4_2016-06-03");
 		ResultScanner rs = util.queryByRowKey(rowkey, rowkey);
 		
@@ -403,32 +403,33 @@ public class HbaseUtils {
 					System.out.print("rowkey:" + new String(rowKV.getRow()) + " ");
 				}
 				
-				/*if(new String(rowKV.getFamily()).equals("popularNumK")) {
+				if(new String(rowKV.getFamily()).equals("popularNumK")) {
 					time = new String(rowKV.getQualifier());
+
 				}
 				
 				if(new String(rowKV.getFamily()).equals("popularNumK")) {
 					popularNum = new String(rowKV.getValue());
-				}*/
+				}
 				
-				//map.put(time, popularNum);
+				map.put(time, popularNum);
 				
-				//System.out.print(" " + new String(rowKV.getFamily()) + " ");
-				//System.out.print(" " + new String(rowKV.getQualifier()) + " ");
-				//System.out.print(":" + new String(rowKV.getValue()));
+				System.out.print(" " + new String(rowKV.getFamily()) + " ");
+				System.out.print(" " + new String(rowKV.getQualifier()) + " ");
+				System.out.print(":" + new String(rowKV.getValue()));
 				
 			}
 			
 			
 
-			System.out.println();
+			System.out.println("------------------------");
 		}
 		
-		for(String time : map.keySet()) {
+	/*	for(String time : map.keySet()) {
 			Calendar cal = Calendar.getInstance();
 			cal.setTimeInMillis(Long.parseLong(time));
-			System.out.println(CalendarUtil.dateFormat(cal.getTime(), "yyyy-MM-dd HH:mm:ss") + " " + map.get(time));
-		}
+			//System.out.println(CalendarUtil.dateFormat(cal.getTime(), "yyyy-MM-dd HH:mm:ss") + " " + map.get(time));
+		}*/
 		
 		rs.close();
 	}

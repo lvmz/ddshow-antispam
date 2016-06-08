@@ -39,7 +39,7 @@ public class PeopleLiveScreenStatAlert {
 
         //************************************开发用**************************************************
 
-   /*     if (args.length < 4) {
+        if (args.length < 4) {
             System.err.println("Usage: BayesKafkaWorkStream <zkQuorum> <group> <topics> <numThreads>");
             System.exit(1);
         }
@@ -56,11 +56,11 @@ public class PeopleLiveScreenStatAlert {
         }
 
         JavaPairReceiverInputDStream<String, String> messages =
-                KafkaUtils.createStream(jssc, args[0], args[1], topicMap);*/
+                KafkaUtils.createStream(jssc, args[0], args[1], topicMap);
     //************************************开发用**************************************************
 
         //************************************线上用**************************************************
-        if (args.length < 4) {
+/*        if (args.length < 4) {
             System.err.println("Usage: JavaKafkaMessageCount <token> <group> <topics> <numThreads>");
             System.exit(1);
         }
@@ -77,7 +77,7 @@ public class PeopleLiveScreenStatAlert {
         }
 
         JavaPairReceiverInputDStream<String, String> messages =
-                MqKafaUtil.createStream(jssc, args[1], topicMap, StorageLevel.MEMORY_AND_DISK_SER(), args[0]);
+                MqKafaUtil.createStream(jssc, args[1], topicMap, StorageLevel.MEMORY_AND_DISK_SER(), args[0]);*/
         //************************************线上用**************************************************
 
         JavaDStream<String> lines = messages.map(new Function<Tuple2<String, String>, String>() {
@@ -93,18 +93,30 @@ public class PeopleLiveScreenStatAlert {
                 return Lists.newArrayList(SPACE.split(s));
             }
         });
+
+        /**
+         * 过滤字段个数大于22的，为下面的filter做准备
+         */
         JavaDStream<ArrayList<String>> words2 =     words.filter(new Function<ArrayList<String>, Boolean>() {
             @Override
             public Boolean call(ArrayList<String> strings) throws Exception {
                 return strings.size()>22;
             }
         });
+
+        /**
+         * 过滤直播间类型为t_people_live_screen_stat
+         */
         JavaDStream<ArrayList<String>> words3 =     words2.filter(new Function<ArrayList<String>, Boolean>() {
             @Override
             public Boolean call(ArrayList<String> strings) throws Exception {
                 return strings.get(22).equals("t_people_live_screen_stat");
             }
         });
+
+        /**
+         * 解析日志中的json
+         */
        JavaPairDStream<String, String> mapToPair =   words3.mapToPair(new PairFunction<ArrayList<String>, String, String>() {
 
            @Override
@@ -118,6 +130,9 @@ public class PeopleLiveScreenStatAlert {
            }
        });
 
+        /**
+         * 根据房间进行reduce聚合
+         */
         JavaPairDStream<String, String> reduceWindow =  mapToPair.reduceByKey(new Function2<String, String, String>() {
             @Override
             public String call(String s, String s2) throws Exception {
@@ -125,6 +140,9 @@ public class PeopleLiveScreenStatAlert {
             }
         });
 
+        /**
+         * 把reduce聚合后的value转换成map
+         */
         JavaPairDStream<String, Map<Long,Integer>> orderedMap =    reduceWindow.mapValues(new Function<String, Map<Long,Integer>>() {
             @Override
             public  Map<Long,Integer> call(String s)
@@ -132,6 +150,10 @@ public class PeopleLiveScreenStatAlert {
                 return Utils.str2Map(s);
             }
         });
+
+        /**
+         * 把 时间戳-人气值 转换为  时间戳-k  其中k值为人气值的差值/时间戳的差值
+         */
         JavaPairDStream<String, Map<Long,Long>> scoreList =  orderedMap.mapValues(new Function<Map<Long,Integer>, Map<Long,Long>>() {
 
             @Override
@@ -140,6 +162,10 @@ public class PeopleLiveScreenStatAlert {
                  return Utils.Map2KMap(map);
             }
         });
+
+        /**
+         * 把结果转换为存储的格式
+         */
         JavaDStream<String> saveList =    scoreList.map(new Function<Tuple2<String,Map<Long,Long>>, String>() {
             @Override
             public  String call(Tuple2<String,Map<Long,Long>> tuple2)
@@ -166,7 +192,7 @@ public class PeopleLiveScreenStatAlert {
                         Long timeStamp = (Long)it.next();
                         Long popularK =  map.get(timeStamp);
                       //  System.out.println("popularNumK"+"qulifiter:"+timeStamp+"value:"+popularK);
-                        put.add(Bytes.toBytes("popularNumK"), Bytes.toBytes(timeStamp), Bytes.toBytes(String.valueOf(popularK)));
+                        put.add(Bytes.toBytes("popularNumK"), Bytes.toBytes(String.valueOf(timeStamp)), Bytes.toBytes(String.valueOf(popularK)));
                     }
                    // putList.add(put);
                     if(put.size()>0)
