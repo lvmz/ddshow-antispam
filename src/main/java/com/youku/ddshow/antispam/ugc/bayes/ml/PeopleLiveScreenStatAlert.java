@@ -39,11 +39,11 @@ public class PeopleLiveScreenStatAlert {
 
         //************************************开发用**************************************************
 
-        if (args.length < 4) {
-            System.err.println("Usage: BayesKafkaWorkStream <zkQuorum> <group> <topics> <numThreads>");
+/*        if (args.length < 4) {
+            System.err.println("Usage: PeopleLiveScreenStatAlert <zkQuorum> <group> <topics> <numThreads>");
             System.exit(1);
         }
-        SparkConf sparkConf = new SparkConf().setAppName("BayesKafkaWorkStream").setExecutorEnv("file.encoding","UTF-8").setMaster("local[8]");
+        SparkConf sparkConf = new SparkConf().setAppName("PeopleLiveScreenStatAlert").setExecutorEnv("file.encoding","UTF-8").setMaster("local[8]");
         // Create the context with a 1 second batch size
         JavaStreamingContext jssc = new JavaStreamingContext(sparkConf, new Duration(10000));
 
@@ -56,12 +56,12 @@ public class PeopleLiveScreenStatAlert {
         }
 
         JavaPairReceiverInputDStream<String, String> messages =
-                KafkaUtils.createStream(jssc, args[0], args[1], topicMap);
+                KafkaUtils.createStream(jssc, args[0], args[1], topicMap);*/
     //************************************开发用**************************************************
 
         //************************************线上用**************************************************
-/*        if (args.length < 4) {
-            System.err.println("Usage: JavaKafkaMessageCount <token> <group> <topics> <numThreads>");
+        if (args.length < 4) {
+            System.err.println("Usage: PeopleLiveScreenStatAlert <token> <group> <topics> <numThreads>");
             System.exit(1);
         }
 
@@ -77,7 +77,7 @@ public class PeopleLiveScreenStatAlert {
         }
 
         JavaPairReceiverInputDStream<String, String> messages =
-                MqKafaUtil.createStream(jssc, args[1], topicMap, StorageLevel.MEMORY_AND_DISK_SER(), args[0]);*/
+                MqKafaUtil.createStream(jssc, args[1], topicMap, StorageLevel.MEMORY_AND_DISK_SER(), args[0]);
         //************************************线上用**************************************************
 
         JavaDStream<String> lines = messages.map(new Function<Tuple2<String, String>, String>() {

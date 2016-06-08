@@ -1,6 +1,5 @@
 package com.youku.ddshow.antispam.utils;
 
-import com.youku.ddshow.antispam.ugc.bayes.ml.BayesKafkaWorkStreamV2;
 
 import java.io.*;
 import java.util.*;
@@ -108,8 +107,6 @@ public class NickNameFilter {
         System.out.println("读取文件内容出错");
         e.printStackTrace();
         }*/
-        System.out.println( BayesKafkaWorkStreamV2.isNewUser("810007157"));
-      System.out.println( BayesKafkaWorkStreamV2.isNewUser("asdfasd"));
-        System.out.println( BayesKafkaWorkStreamV2.isNewUser("910007157"));
+
     }
 }

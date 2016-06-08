@@ -389,7 +389,7 @@ public class HbaseUtils {
 		}
 		statDate = "2016-05-25";
 		//String rowkey = modStr + "_" + roomId + "_" + statDate;
-		String rowkey ="05_5_2016-06-08";
+		String rowkey ="06_183896_2016-06-08";
 		//System.out.println("04_4_2016-06-03");
 		ResultScanner rs = util.queryByRowKey(rowkey, rowkey);
 		
