@@ -355,7 +355,7 @@ public class HbaseUtils {
 		for(KeyValue kv : rs.raw()){
 			if(family.equals(new String(kv.getFamily())))
 			{
-				kvMap.put(kv.getQualifier().toString(),kv.getValue().toString());
+				kvMap.put(new String(kv.getQualifier()),new String(kv.getValue()));
 			}
 		}
 		return new Tuple3<String,String,Map<String,String>>(rowKey,family,kvMap);
