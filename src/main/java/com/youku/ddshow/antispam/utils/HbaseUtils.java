@@ -11,6 +11,8 @@ import org.apache.hadoop.hbase.filter.SubstringComparator;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import scala.Tuple3;
+import scala.Tuple4;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
@@ -342,96 +344,28 @@ public class HbaseUtils {
 
 		return null;
 	}
+	/**
+	 * 查找一行记录
+	 */
+	public  Tuple3<String,String,Map<String,String>> getOneRecord (String rowKey) throws IOException{
+		Get get = new Get(rowKey.getBytes());
+		Result rs = table.get(get);
+        String family = null;
+		Map<String,String> kvMap = new HashMap<>();
+		for(KeyValue kv : rs.raw()){
+			family = kv.getFamily().toString();
+			kvMap.put(kv.getQualifier().toString(),kv.getValue().toString());
+		}
+
+		return new Tuple3<String,String,Map<String,String>>(rowKey,family,kvMap);
+	}
 
 	public static void main(String[] args) throws Exception {
-		//System.setProperty("hadoop.home.dir", "E:\\hadoop\\hadoop-2.5.2\\hadoop-2.5.2");
-		
-//		HbaseUtils util = new HbaseUtils(PropertiesType.DDSHOW_HASE_TEST, "lf_t_detail_user_chat_content_room");
-//		ResultScanner rs = util.queryByRowKey("46562_2016-04-07 11:10:27_0", "46562_2016-04-07 15:30:27_9");
-		
-		
-//		HbaseUtils util = new HbaseUtils(PropertiesType.DDSHOW_HASE_TEST, "lf_t_detail_user_chat_content_user");
-//		ResultScanner rs = util.queryByRowKey("912_2016-03-28 16:50:27_0", "912_2016-03-28 20:48:27_9999");
-		
-//		HbaseUtils util = new HbaseUtils(PropertiesType.DDSHOW_HASE_TEST, "lf_t_detail_user_chat_content_room_user");
-//		ResultScanner rs = util.queryByRowKey("59_912_2016-03-28 16:50:27", "59_912_2016-03-28 20:48:27");
-//		util.println(rs);
-		
-//		HbaseUtils util = new HbaseUtils(PropertiesType.DDSHOW_HASE_TEST, "lf_t_view_user_cost_stat");
-	
-//		util.dropTable();
-		
-//		HbaseUtils util = new HbaseUtils(PropertiesType.DDSHOW_HASE_TEST, "lf_t_view_user_cost_stat");
-//		ResultScanner rs = util.queryByRowKey("-1_2016-05-04 11:00:00_-1", "-1_2016-05-04 23:00:00_-1");
-//		util.println(rs);
-		
 		HbaseUtils util = new HbaseUtils(PropertiesType.DDSHOW_HASE_TEST, "lf_t_view_hbase_room_stat");
-		
-//		Put put = new Put(Bytes.toBytes("145027_2016-05-25"));
-//		
-//		Long timeStamp = Calendar.getInstance().getTimeInMillis();
-//		
-//		put.add(Bytes.toBytes("roomid"), Bytes.toBytes("roomid"), Bytes.toBytes("145027"));
-//		put.add(Bytes.toBytes("stat_date"), Bytes.toBytes("stat_date"), Bytes.toBytes("2016-05-25")); 
-//		put.add(Bytes.toBytes("epb_hot"), Bytes.toBytes(timeStamp.toString()), Bytes.toBytes("100"));
-//		
-//		util.addData(put);
-		
-//		util.queryAll();
-		
-		Integer roomId = 129136;
-		String statDate = CalendarUtil.getToday();
-		
-		Integer mod = roomId % 10;
-		String modStr = mod + "";
-		if(mod < 10) {
-			modStr = "0" + mod;
-		}
-		statDate = "2016-05-25";
-		//String rowkey = modStr + "_" + roomId + "_" + statDate;
-		String rowkey ="06_183896_2016-06-08";
-		//System.out.println("04_4_2016-06-03");
-		ResultScanner rs = util.queryByRowKey(rowkey, rowkey);
-		
-		Map<String, String> map = new LinkedHashMap<String, String>();
-		for (Result result : rs) {
-			int i = 0;
-			String time = "";
-			String popularNum = "";
-			for (KeyValue rowKV : result.list()) {
-				if (i++ == 0) {
-					System.out.print("rowkey:" + new String(rowKV.getRow()) + " ");
-				}
-				
-				if(new String(rowKV.getFamily()).equals("popularNumK")) {
-					time = new String(rowKV.getQualifier());
-
-				}
-				
-				if(new String(rowKV.getFamily()).equals("popularNumK")) {
-					popularNum = new String(rowKV.getValue());
-				}
-				
-				map.put(time, popularNum);
-				
-				System.out.print(" " + new String(rowKV.getFamily()) + " ");
-				System.out.print(" " + new String(rowKV.getQualifier()) + " ");
-				System.out.print(":" + new String(rowKV.getValue()));
-				
-			}
-			
-			
-
-			System.out.println("------------------------");
-		}
-		
-	/*	for(String time : map.keySet()) {
-			Calendar cal = Calendar.getInstance();
-			cal.setTimeInMillis(Long.parseLong(time));
-			//System.out.println(CalendarUtil.dateFormat(cal.getTime(), "yyyy-MM-dd HH:mm:ss") + " " + map.get(time));
-		}*/
-		
-		rs.close();
+		Long a=  System.currentTimeMillis();
+		util.getOneRecord("09_139099_2016-06-08");
+		Long b = System.currentTimeMillis();
+		System.out.println(b-a);
 	}
 
 }

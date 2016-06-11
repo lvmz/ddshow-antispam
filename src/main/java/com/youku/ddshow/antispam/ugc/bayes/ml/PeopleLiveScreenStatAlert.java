@@ -7,7 +7,10 @@ import com.youku.ddshow.antispam.model.PropertiesType;
 import com.youku.ddshow.antispam.utils.CalendarUtil;
 import com.youku.ddshow.antispam.utils.HbaseUtils;
 import com.youku.ddshow.antispam.utils.Utils;
+import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.function.Function;
@@ -22,7 +25,10 @@ import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.apache.spark.streaming.kafka.KafkaUtils;
 import org.apache.spark.streaming.kafka.MqKafaUtil;
 import scala.Tuple2;
+import scala.Tuple3;
+import scala.Tuple4;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -39,7 +45,7 @@ public class PeopleLiveScreenStatAlert {
 
         //************************************开发用**************************************************
 
-/*        if (args.length < 4) {
+        if (args.length < 4) {
             System.err.println("Usage: PeopleLiveScreenStatAlert <zkQuorum> <group> <topics> <numThreads>");
             System.exit(1);
         }
@@ -56,11 +62,11 @@ public class PeopleLiveScreenStatAlert {
         }
 
         JavaPairReceiverInputDStream<String, String> messages =
-                KafkaUtils.createStream(jssc, args[0], args[1], topicMap);*/
+                KafkaUtils.createStream(jssc, args[0], args[1], topicMap);
     //************************************开发用**************************************************
 
         //************************************线上用**************************************************
-        if (args.length < 4) {
+ /*       if (args.length < 4) {
             System.err.println("Usage: PeopleLiveScreenStatAlert <token> <group> <topics> <numThreads>");
             System.exit(1);
         }
@@ -77,7 +83,7 @@ public class PeopleLiveScreenStatAlert {
         }
 
         JavaPairReceiverInputDStream<String, String> messages =
-                MqKafaUtil.createStream(jssc, args[1], topicMap, StorageLevel.MEMORY_AND_DISK_SER(), args[0]);
+                MqKafaUtil.createStream(jssc, args[1], topicMap, StorageLevel.MEMORY_AND_DISK_SER(), args[0]);*/
         //************************************线上用**************************************************
 
         JavaDStream<String> lines = messages.map(new Function<Tuple2<String, String>, String>() {
@@ -168,12 +174,11 @@ public class PeopleLiveScreenStatAlert {
          */
         JavaDStream<String> saveList =    scoreList.map(new Function<Tuple2<String,Map<Long,Long>>, String>() {
             @Override
-            public  String call(Tuple2<String,Map<Long,Long>> tuple2)
-            {
+            public  String call(Tuple2<String,Map<Long,Long>> tuple2) throws IOException {
                 String roomId =  tuple2._1();
                 Map<Long,Long> map =   tuple2._2();
 
-                if(map!=null)
+                if(map!=null&&map.size()>0)
                 {
                     Integer roomid =   Integer.parseInt(roomId);
                     Integer mod = roomid % 10;
@@ -184,6 +189,7 @@ public class PeopleLiveScreenStatAlert {
                     String statDate = CalendarUtil.getToday();
                     String rowkey = modStr + "_" + roomId + "_" + statDate;
                     System.out.println("rowkey------------------------------->"+rowkey);
+                    System.out.println("rowkey--size----------------------------->"+map.size());
                     Put put = new Put(Bytes.toBytes(rowkey));
 
                     Iterator it =  map.keySet().iterator();
@@ -198,13 +204,23 @@ public class PeopleLiveScreenStatAlert {
                     if(put.size()>0)
                     {
                         List<Put> putList = new ArrayList<Put>();
+                        ResultScanner rs = null;
                         putList.add(put);
+                        Tuple3<String,String,Map<String,String>> tuple3 = null;
                         synchronized (test_db) {
                             test_db.addDataBatch(putList);
+                            tuple3 =  test_db.getOneRecord(rowkey);
                         }
+                        if(tuple3!=null)
+                        {
+                            System.out.println("Rowkey++++++++++++++++++>"+tuple3._1());
+                            System.out.println("Rowkey size++++++++++++++++++>"+tuple3._3().size());
+                        }
+
                         putList.clear();
                     }
                 }
+
                 return roomId+"_true";
             }
         });
