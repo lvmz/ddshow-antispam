@@ -347,23 +347,24 @@ public class HbaseUtils {
 	/**
 	 * 查找一行记录
 	 */
-	public  Tuple3<String,String,Map<String,String>> getOneRecord (String rowKey) throws IOException{
+	public  Tuple3<String,String,Map<String,String>> getOneRecord (String rowKey,String family) throws IOException{
 		Get get = new Get(rowKey.getBytes());
 		Result rs = table.get(get);
-        String family = null;
+       // String family = null;
 		Map<String,String> kvMap = new HashMap<>();
 		for(KeyValue kv : rs.raw()){
-			family = kv.getFamily().toString();
-			kvMap.put(kv.getQualifier().toString(),kv.getValue().toString());
+			if(family.equals(new String(kv.getFamily())))
+			{
+				kvMap.put(kv.getQualifier().toString(),kv.getValue().toString());
+			}
 		}
-
 		return new Tuple3<String,String,Map<String,String>>(rowKey,family,kvMap);
 	}
 
 	public static void main(String[] args) throws Exception {
 		HbaseUtils util = new HbaseUtils(PropertiesType.DDSHOW_HASE_TEST, "lf_t_view_hbase_room_stat");
 		Long a=  System.currentTimeMillis();
-		util.getOneRecord("09_139099_2016-06-08");
+		util.getOneRecord("09_139099_2016-06-08","popularNumK");
 		Long b = System.currentTimeMillis();
 		System.out.println(b-a);
 	}
