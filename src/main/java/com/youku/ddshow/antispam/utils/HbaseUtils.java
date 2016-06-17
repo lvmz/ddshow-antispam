@@ -1,5 +1,6 @@
 package com.youku.ddshow.antispam.utils;
 
+import com.alibaba.fastjson.JSON;
 import com.youku.ddshow.antispam.model.PropertiesType;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.*;
@@ -9,6 +10,7 @@ import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
 import org.apache.hadoop.hbase.filter.SubstringComparator;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.hadoop.hbase.util.ConcatenatedLists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.Tuple3;
@@ -137,19 +139,14 @@ public class HbaseUtils {
         try {  
             List<Delete> list = new ArrayList<Delete>(); 
             for(String rowkey : rowkeyList) {
-            	Delete d1 = new Delete(rowkey.getBytes());  
+            	Delete d1 = new Delete(rowkey.getBytes());
                 list.add(d1);
             }
-              
-              
             table.delete(list);  
-            System.out.println("删除行成功!");  
-              
+            System.out.println("删除行成功!");
         } catch (IOException e) {  
             e.printStackTrace();  
-        }  
-          
-  
+        }
     }  
 
 	/**
@@ -350,8 +347,9 @@ public class HbaseUtils {
 	public  Tuple3<String,String,Map<String,String>> getOneRecord (String rowKey,String family) throws IOException{
 		Get get = new Get(rowKey.getBytes());
 		Result rs = table.get(get);
+
        // String family = null;
-		Map<String,String> kvMap = new HashMap<>();
+		Map<String,String> kvMap = new TreeMap<>();
 		for(KeyValue kv : rs.raw()){
 			if(family.equals(new String(kv.getFamily())))
 			{
@@ -361,12 +359,161 @@ public class HbaseUtils {
 		return new Tuple3<String,String,Map<String,String>>(rowKey,family,kvMap);
 	}
 
+
+
+	/**
+	 * 查找rank 值
+	 */
+	public  Integer getRank (String rowKey,String family) throws IOException{
+		Tuple3<String,String,Map<String,String>> tuple3 =  getOneRecord(rowKey,family);
+		Map map =  tuple3._3();
+		if( map.get("rank")!=null)
+		{
+			return  Integer.parseInt(map.get("rank").toString());
+		}else
+		{
+			return null;
+		}
+	}
+
+	public  Map  getRanks(List<String> rowkeyList,String family,String qualifier ) throws IOException{
+           List<Get> getList = new ArrayList<Get>();
+		   for(String rowkey: rowkeyList)
+			 {
+				 Get get = new Get(rowkey.getBytes());
+				 getList.add(get);
+			 }
+		 Result[] results =  table.get(getList);
+		Map<String,String> kvMap = new TreeMap<>();
+		 for(Result rs:results )
+		 {
+			 for(KeyValue kv : rs.raw()){
+				 if(family.equals(new String(kv.getFamily()))&&qualifier.equals(new String(kv.getQualifier())))
+				 {
+					  kvMap.put(new String(kv.getRow()).split("_")[1],new String(kv.getValue()));
+				 }
+			 }
+		 }
+		return kvMap;
+	}
+
+
+
+	/**
+	 * 普通生成rowkey
+	 * @param roomid
+     * @return
+     */
+	public static  String createRowKey(Integer roomid)
+	{
+		if(roomid<0||roomid==null) return  null;
+		Integer mod = roomid % 10;
+		String modStr = mod + "";
+		if(mod < 10) {
+			modStr = "0" + mod;
+		}
+		String statDate = CalendarUtil.getToday();
+		String rowkey = modStr + "_" + roomid + "_" + statDate;
+		return rowkey;
+	}
+
+	/**
+	 * 为rank值生成rowkey 由于rank值只有昨天的数据，所以日期沿用昨天的
+	 * @param roomid
+	 * @return
+     */
+	public static String createRowKeyForRank(Integer roomid)
+	{
+		if(roomid<0||roomid==null) return  null;
+		Integer mod = roomid % 10;
+		String modStr = mod + "";
+		if(mod < 10) {
+			modStr = "0" + mod;
+		}
+		String statDate = CalendarUtil.getYesterday();
+		String rowkey = modStr + "_" + roomid + "_" + statDate;
+		return rowkey;
+	}
+	/**
+	 * 临时性的为rank值生成rowkey，以后要废弃
+	 * @param roomid
+	 * @return
+	 */
+	public static  String createRowKeyForRank614(Integer roomid)
+	{
+		if(roomid<0||roomid==null) return  null;
+		Integer mod = roomid % 10;
+		String modStr = mod + "";
+		if(mod < 10) {
+			modStr = "0" + mod;
+		}
+		String rowkey = modStr + "_" + roomid + "_" + "2016-06-16";
+		return rowkey;
+	}
+
+
 	public static void main(String[] args) throws Exception {
 		HbaseUtils util = new HbaseUtils(PropertiesType.DDSHOW_HASE_TEST, "lf_t_view_hbase_room_stat");
 		Long a=  System.currentTimeMillis();
-		util.getOneRecord("09_139099_2016-06-08","popularNumK");
+		Tuple3<String,String,Map<String,String>> tuple3 =  util.getOneRecord("02_roomid","popularNumK");
+		Map map =  tuple3._3();
+		String jsonstr =   map.get("roomuid").toString();
+		//System.out.println(jsonstr);
+		Map roomuid =   (Map<String,String>)JSON.parse(jsonstr);
+		  System.out.println(roomuid.get("912077093"));
 		Long b = System.currentTimeMillis();
 		System.out.println(b-a);
+
+	/*	HbaseUtils util = new HbaseUtils(PropertiesType.DDSHOW_HASE_TEST, "lf_t_view_hbase_room_stat");
+		Long a=  System.currentTimeMillis();
+		Integer rank =  util.getRank("09_69119_2016-06-16","base_info");
+
+		//Integer rank2 = (rank==null?rank:-1);
+		System.out.println(rank);
+		Long b = System.currentTimeMillis();
+		System.out.println(b-a);*/
+
+
+		/*HbaseUtils util = new HbaseUtils(PropertiesType.DDSHOW_HASE_TEST, "lf_t_view_hbase_room_stat");
+		Long a=  System.currentTimeMillis();
+		Tuple3<String,String,Map<String,String>> tuple3 =  util.getOneRecord("05_144765_2016-06-17","popularNumK");
+		Map map =  tuple3._3();
+		Iterator it = map.keySet().iterator();
+		while (it.hasNext())
+		{
+			String key = it.next().toString();
+			String value = map.get(key).toString();
+			System.out.println(CalendarUtil.getDetailDateFormat(Long.parseLong(key))+"---"+value);
+		}
+		Long b = System.currentTimeMillis();
+		System.out.println(b-a);*/
+
+		/*HbaseUtils util = new HbaseUtils(PropertiesType.DDSHOW_HASE_TEST, "lf_t_view_hbase_room_stat");
+		Long a=  System.currentTimeMillis();
+		Tuple3<String,String,Map<String,String>> tuple3 =  util.getOneRecord("11_danger","popularNumK");
+		Map map =  tuple3._3();
+		Iterator it = map.keySet().iterator();
+		while (it.hasNext())
+		{
+
+			String key = it.next().toString();
+			String value = map.get(key).toString();
+			System.out.println(key+"---"+value);
+		}
+		Long b = System.currentTimeMillis();
+		System.out.println(b-a);*/
+
+		/*HbaseUtils util = new HbaseUtils(PropertiesType.DDSHOW_HASE_TEST, "lf_t_view_hbase_room_stat");
+		Long a=  System.currentTimeMillis();
+		List<String> rowkey = new ArrayList<String>();
+		rowkey.add(createRowKeyForRank614(171699));
+		rowkey.add(createRowKeyForRank614(174213));
+		rowkey.add(createRowKeyForRank614(180103));
+		rowkey.add(createRowKeyForRank614(181957));
+		rowkey.add(createRowKeyForRank614(185224));
+		Map ranks =  util.getRanks(rowkey,"base_info","rank");
+		Long b = System.currentTimeMillis();
+		System.out.println(b-a);*/
 	}
 
 }
