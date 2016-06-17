@@ -9,6 +9,7 @@ import com.youku.ddshow.antispam.utils.HbaseUtils;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.spark.SparkConf;
+import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.Function;
@@ -151,16 +152,40 @@ public class PeopleLiveScreenStatAlertNoHbase {
         line.foreachRDD(new Function2<JavaPairRDD<String, String>, Time, Void>() {
             @Override
             public Void call(JavaPairRDD<String, String> stringStringJavaPairRDD, Time time) throws Exception {
+              final SparkContext sc =  stringStringJavaPairRDD.rdd().sparkContext();
                 RDD<String> textFile = stringStringJavaPairRDD
                         .rdd().sparkContext().textFile("D:\\文本分类\\popularAlert", 1);
-                JavaRDD<java.util.List<java.lang.String>> roomiduid =  textFile.toJavaRDD().map(new Function<String, List<String>>() {
+                JavaRDD<java.util.List<java.lang.String>> t_room =  textFile.toJavaRDD().map(new Function<String, List<String>>() {
                       @Override
                       public List<String> call(String s) throws Exception {
                           System.out.println(s);
                           return Arrays.asList(SPACE.split(s));
                       }
                   });
-                roomiduid.collect();//用来触发rdd
+                JavaPairRDD<String, scala.Tuple2<Integer, Integer>>  roomiduid =  t_room.mapToPair(new PairFunction<List<String>,String,Tuple2<Integer,Integer>>() {
+                    @Override
+                    public Tuple2<String, Tuple2<Integer,Integer>> call(List<String> strings) throws Exception {
+                           Integer roomid =   Integer.parseInt(strings.get(0));
+                           Integer uid = Integer.parseInt(strings.get(1));
+                        return new  Tuple2<String, Tuple2<Integer,Integer>>("roomiduid",new Tuple2<Integer, Integer>(roomid,uid));
+                    }
+                });
+                 roomiduid.groupByKey().mapValues(new Function<Iterable<Tuple2<Integer,Integer>>, Object>() {
+
+                     @Override
+                     public Object call(Iterable<Tuple2<Integer, Integer>> tuple2s) throws Exception {
+
+                         for(Tuple2<Integer, Integer> tuple2 : tuple2s)
+                         {
+                             System.out.println();
+                         }
+
+                         return null;
+                     }
+                 });
+
+
+                roomiduid.collect();  //用来触发rdd
                 return null;
             }
         });
