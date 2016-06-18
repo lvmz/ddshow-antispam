@@ -102,7 +102,7 @@ public class PeopleLiveScreenStatAlertNoHbase {
 
         //************************************开发用**************************************************
 
-        if (args.length < 4) {
+      /*  if (args.length < 4) {
             System.err.println("Usage: PeopleLiveScreenStatAlert <zkQuorum> <group> <topics> <numThreads>");
             System.exit(1);
         }
@@ -119,7 +119,7 @@ public class PeopleLiveScreenStatAlertNoHbase {
         }
 
         JavaPairReceiverInputDStream<String, String> messages =
-                KafkaUtils.createStream(jssc, args[0], args[1], topicMap);
+                KafkaUtils.createStream(jssc, args[0], args[1], topicMap);*/
     //************************************开发用**************************************************
 
         //************************************线上用**************************************************
@@ -143,7 +143,7 @@ public class PeopleLiveScreenStatAlertNoHbase {
                 MqKafaUtil.createStream(jssc, args[1], topicMap, StorageLevel.MEMORY_AND_DISK_SER(), args[0]);*/
         //************************************线上用**************************************************
 
-        JavaPairDStream<java.lang.String, java.lang.String>  line =  messages.mapToPair(new PairFunction<Tuple2<String,String>, String, String>() {
+       /* JavaPairDStream<java.lang.String, java.lang.String>  line =  messages.mapToPair(new PairFunction<Tuple2<String,String>, String, String>() {
             @Override
             public Tuple2<String, String> call(Tuple2<String, String> stringStringTuple2) throws Exception {
                 return new Tuple2<String, String>("kafka",stringStringTuple2._2());
@@ -154,11 +154,11 @@ public class PeopleLiveScreenStatAlertNoHbase {
             public Void call(JavaPairRDD<String, String> stringStringJavaPairRDD, Time time) throws Exception {
               final SparkContext sc =  stringStringJavaPairRDD.rdd().sparkContext();
                 RDD<String> textFile = stringStringJavaPairRDD
-                        .rdd().sparkContext().textFile("D:\\文本分类\\popularAlert", 1);
+                        .rdd().sparkContext().textFile("D:\\popular", 1);
                 JavaRDD<java.util.List<java.lang.String>> t_room =  textFile.toJavaRDD().map(new Function<String, List<String>>() {
                       @Override
                       public List<String> call(String s) throws Exception {
-                          System.out.println(s);
+                          //System.out.println(s);
                           return Arrays.asList(SPACE.split(s));
                       }
                   });
@@ -190,14 +190,8 @@ public class PeopleLiveScreenStatAlertNoHbase {
             }
         });
 
-       /* JavaDStream<String> lines2 = messages.map(new Function<Tuple2<String, String>, String>() {
-            @Override
-            public String call(Tuple2<String, String> tuple2) throws IOException {
-                return tuple2._2();
-            }
-        });*/
         line.print(5000);
         jssc.start();
-        jssc.awaitTermination();
+        jssc.awaitTermination();*/
     }
 }
