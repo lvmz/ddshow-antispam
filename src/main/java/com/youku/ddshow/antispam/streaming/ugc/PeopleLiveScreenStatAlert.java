@@ -43,16 +43,15 @@ public class PeopleLiveScreenStatAlert {
     private static Map<Integer, Integer> roomidUidMap = new ConcurrentHashMap<Integer, Integer>();
     public static void main(String[] args) {
 
-        //************************************开发用**************************************************
 
+        //************************************开发用**************************************************
        /* if (args.length < 4) {
             System.err.println("Usage: PeopleLiveScreenStatAlert <zkQuorum> <group> <topics> <numThreads> <prais> <chat> <hbasekey> <abandon> <roomiduid>");
             System.exit(1);
         }
         SparkConf sparkConf = new SparkConf().setAppName("PeopleLiveScreenStatAlert").setExecutorEnv("file.encoding","UTF-8").setMaster("local[8]");
         // Create the context with a 1 second batch size
-        JavaStreamingContext jssc = new JavaStreamingContext(sparkConf, new Duration(2000));
-
+        JavaStreamingContext jssc = new JavaStreamingContext(args[9],"PeopleLiveScreenStatAlert", new Duration(2000),System.getenv("SPARK_HOME"),JavaSparkContext.jarOfClass(PeopleLiveScreenStatAlert.class));
 
         int numThreads = Integer.parseInt(args[3]);
         Map<String, Integer> topicMap = new HashMap<String, Integer>();
@@ -73,7 +72,9 @@ public class PeopleLiveScreenStatAlert {
         SparkConf sparkConf = new SparkConf().setAppName("PeopleLiveScreenStatAlert").setExecutorEnv("file.encoding","UTF-8");
         // Create the context with 60 seconds batch size
 
-        JavaStreamingContext jssc = new JavaStreamingContext(sparkConf, new Duration(10000));
+        JavaStreamingContext jssc = new JavaStreamingContext(args[9],"PeopleLiveScreenStatAlert", new Duration(10000),System.getenv("SPARK_HOME"),JavaSparkContext.jarOfClass(PeopleLiveScreenStatAlert.class));
+
+
 
         int numThreads = Integer.parseInt(args[3]);
         Map<String, Integer> topicMap = new HashMap<String, Integer>();
@@ -96,7 +97,7 @@ public class PeopleLiveScreenStatAlert {
                 return tuple2._2();
             }
         });
-      /* 通过分隔符切割字符*/
+
 
         JavaDStream<ArrayList<String>> splited = lines.map(new Function<String, ArrayList<String>>() {
             @Override
@@ -130,11 +131,14 @@ public class PeopleLiveScreenStatAlert {
                 if(intAccumulator.value()%5==0)
                 {
                     RDD<String> textFile = arrayListJavaRDD
-                            .rdd().sparkContext().textFile(roomiduid, 1);
+                            .rdd()
+                            .sparkContext()
+
+                            .textFile(roomiduid, 1);
                     JavaRDD<java.util.List<java.lang.String>> t_room =  textFile.toJavaRDD().map(new Function<String, List<String>>() {
                         @Override
                         public List<String> call(String s) throws Exception {
-                           // System.out.println(s);
+                            System.out.println(s);
                             return Arrays.asList(SPACE.split(s));
                         }
                     });
