@@ -30,8 +30,9 @@ lazy val jarTopack =   Seq(
   "com.belerweb" % "pinyin4j" % "2.5.0",
   "org.apache.hbase" % "hbase-client" % "0.98.4-hadoop2",
   "org.apache.hbase" % "hbase-common" % "0.98.4-hadoop2",
-  "org.apache.spark" %% "spark-streaming-kafka-mq" % "1.6.1" % "provided" ,
-  "org.apache.spark" %% "spark-streaming-kafka" % "1.5.2"
+  "org.apache.spark" %% "spark-streaming-kafka-mq" % "1.6.1" /*% "provided"*/ ,
+  "org.apache.spark" %% "spark-streaming-kafka" % "1.5.2"/*,
+  "com.youku.data" % "data-spark-common" % "0.1.0"*/
 )
 
 assemblyMergeStrategy in assembly := {
