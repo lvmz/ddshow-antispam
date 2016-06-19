@@ -26,19 +26,17 @@ import java.util.regex.Pattern;
  */
 public class SaveTroom2Hbase {
     private static final Pattern SPACE = Pattern.compile("\t");
-    private static HbaseUtils test_db = new HbaseUtils(PropertiesType.DDSHOW_HASE_TEST, "lf_t_view_hbase_room_stat");
-    private static List<Put> putList = new ArrayList<Put>();
-    private static Map<String, String> concurrentHashMap = new ConcurrentHashMap<String, String>();
     public static void main(String[] args)
     {
-        if (args.length < 1) {
-            System.err.println("Usage: SaveTroom2Hbase <file>");
+        if (args.length < 2) {
+            System.err.println("Usage: SaveTroom2Hbase <master> <file>");
             System.exit(1);
         }
 
-        SparkConf sparkConf = new SparkConf().setAppName("SaveTroom2Hbase").setMaster("local");
-        JavaSparkContext ctx = new JavaSparkContext(sparkConf);
-        JavaRDD<String> line =  ctx.textFile(args[0],1);
+        JavaSparkContext ctx = new JavaSparkContext(args[0], "SaveTroom2Hbase",
+                System.getenv("SPARK_HOME"), JavaSparkContext.jarOfClass(SaveTroom2Hbase.class));
+       // JavaSparkContext ctx = new JavaSparkContext(sparkConf);
+        JavaRDD<String> line =  ctx.textFile(args[1],1);
 
         JavaRDD<ArrayList<String>> word =  line.map(new Function<String, ArrayList<String>>() {
             @Override
@@ -62,27 +60,14 @@ public class SaveTroom2Hbase {
             }
         });
 
-
-
-
         uidRoom.foreach(new VoidFunction<Tuple2<String, String>>() {
             @Override
             public void call(Tuple2<String, String> stringStringTuple2) throws Exception {
-                concurrentHashMap.put(stringStringTuple2._1(),stringStringTuple2._2());
+                System.out.println(stringStringTuple2._1()+"-"+stringStringTuple2._2());
+                //concurrentHashMap.put(stringStringTuple2._1(),stringStringTuple2._2());
             }
         });
 
-
-        String mapstr =   JSON.toJSONString(concurrentHashMap);
-
-       // System.out.println(mapstr);
-        String rowkey = "02_roomid";
-        Put put = new Put(Bytes.toBytes(rowkey));
-        put.add(Bytes.toBytes("popularNumK"), Bytes.toBytes(String.valueOf("roomuid")), Bytes.toBytes(String.valueOf(mapstr)));
-        List<Put> putList = new ArrayList<Put>();
-        putList.add(put);
-        test_db.addDataBatch(putList);
-        putList.clear();
-        ctx.stop();
+        System.exit(0);
     }
 }
