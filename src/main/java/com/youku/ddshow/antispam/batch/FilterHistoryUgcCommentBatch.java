@@ -15,10 +15,13 @@
  * limitations under the License.
  */
 
-package com.youku.ddshow.antispam.ugc.bayes.history;
+package com.youku.ddshow.antispam.batch;
 
 import com.youku.ddshow.antispam.model.PropertiesType;
-import com.youku.ddshow.antispam.utils.*;
+import com.youku.ddshow.antispam.utils.BysJava2;
+import com.youku.ddshow.antispam.utils.CalendarUtil;
+import com.youku.ddshow.antispam.utils.Database;
+import com.youku.ddshow.antispam.utils.LaifengWordAnalyzer;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
