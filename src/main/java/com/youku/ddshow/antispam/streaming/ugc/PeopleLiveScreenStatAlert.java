@@ -84,7 +84,7 @@ public class PeopleLiveScreenStatAlert {
         JavaPairReceiverInputDStream<String, String> messages =
                 MqKafaUtil.createStream(jssc, args[1], topicMap, StorageLevel.MEMORY_AND_DISK_SER(), args[0]);*/
         //************************************线上用**************************************************
-        Accumulator<Integer> intAccumulator  = jssc.sc().intAccumulator(0);
+        final Accumulator<Integer> intAccumulator  = jssc.sc().intAccumulator(0);
         final Integer praisthreshold = Integer.parseInt(args[4]);
         final Integer chatthreshold = Integer.parseInt(args[5]);
         final String hbasekey = args[6];
