@@ -156,6 +156,7 @@ public class PeopleLiveScreenStatAlert {
                         public Object call(Iterable<Tuple2<Integer, Integer>> tuple2s) throws Exception {
                             for(Tuple2<Integer, Integer> tuple2 : tuple2s)
                             {
+                               System.out.println(tuple2._2()+"---->"+tuple2._1());
                                 roomidUidMap.put(tuple2._2(),tuple2._1());
                             }
                             return null;
