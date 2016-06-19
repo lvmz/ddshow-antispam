@@ -72,7 +72,7 @@ public class PeopleLiveScreenStatAlert {
         SparkConf sparkConf = new SparkConf().setAppName("PeopleLiveScreenStatAlert").setExecutorEnv("file.encoding","UTF-8");
         // Create the context with 60 seconds batch size
 
-        JavaStreamingContext jssc = new JavaStreamingContext(args[9],"PeopleLiveScreenStatAlert", new Duration(10000),System.getenv("SPARK_HOME"),JavaSparkContext.jarOfClass(PeopleLiveScreenStatAlert.class));
+        JavaStreamingContext jssc = new JavaStreamingContext(args[9],"PeopleLiveScreenStatAlert", new Duration(2000),System.getenv("SPARK_HOME"),JavaSparkContext.jarOfClass(PeopleLiveScreenStatAlert.class));
 
 
 
@@ -138,7 +138,7 @@ public class PeopleLiveScreenStatAlert {
                     JavaRDD<java.util.List<java.lang.String>> t_room =  textFile.toJavaRDD().map(new Function<String, List<String>>() {
                         @Override
                         public List<String> call(String s) throws Exception {
-                           // System.out.println(s);
+                           System.out.println(s);
                             return Arrays.asList(SPACE.split(s));
                         }
                     });
