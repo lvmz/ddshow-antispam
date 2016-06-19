@@ -45,7 +45,7 @@ public class PeopleLiveScreenStatAlert {
 
         //************************************开发用**************************************************
 
-        if (args.length < 4) {
+       /* if (args.length < 4) {
             System.err.println("Usage: PeopleLiveScreenStatAlert <zkQuorum> <group> <topics> <numThreads> <prais> <chat> <hbasekey> <abandon> <roomiduid>");
             System.exit(1);
         }
@@ -62,11 +62,11 @@ public class PeopleLiveScreenStatAlert {
         }
 
         JavaPairReceiverInputDStream<String, String> messages =
-                KafkaUtils.createStream(jssc, args[0], args[1], topicMap);
+                KafkaUtils.createStream(jssc, args[0], args[1], topicMap);*/
     //************************************开发用**************************************************
 
         //************************************线上用**************************************************
-      /*  if (args.length < 8) {
+        if (args.length < 8) {
             System.err.println("Usage: PeopleLiveScreenStatAlert <token> <group> <topics> <numThreads> <prais> <chat> <hbasekey> <abandon> <roomiduid>");
             System.exit(1);
         }
@@ -82,7 +82,7 @@ public class PeopleLiveScreenStatAlert {
             topicMap.put(topic, numThreads);
         }
         JavaPairReceiverInputDStream<String, String> messages =
-                MqKafaUtil.createStream(jssc, args[1], topicMap, StorageLevel.MEMORY_AND_DISK_SER(), args[0]);*/
+                MqKafaUtil.createStream(jssc, args[1], topicMap, StorageLevel.MEMORY_AND_DISK_SER(), args[0]);
         //************************************线上用**************************************************
         final Accumulator<Integer> intAccumulator  = jssc.sc().intAccumulator(0);
         final Integer praisthreshold = Integer.parseInt(args[4]);
