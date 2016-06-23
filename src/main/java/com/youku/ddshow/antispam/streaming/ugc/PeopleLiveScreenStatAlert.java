@@ -10,12 +10,14 @@ import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.spark.Accumulator;
 import org.apache.spark.SparkConf;
+import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.PairFunction;
+import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.rdd.RDD;
 import org.apache.spark.storage.StorageLevel;
 import org.apache.spark.streaming.Duration;
@@ -41,6 +43,28 @@ import java.util.regex.Pattern;
 public class PeopleLiveScreenStatAlert {
     private static final Pattern SPACE = Pattern.compile("\t");
     private static Map<Integer, Integer> roomidUidMap = new ConcurrentHashMap<Integer, Integer>();
+    private static Broadcast<JavaPairRDD<String, Iterable<Tuple2<Integer,Integer>>>>   broadcastRoomiduid(JavaStreamingContext jssc,String roomiduidPath)
+    {
+        JavaSparkContext ctx = jssc.sparkContext();
+        JavaRDD<String> textFile = ctx.textFile(roomiduidPath, 1);
+        JavaRDD<java.util.List<java.lang.String>> t_room =  textFile.map(new Function<String, List<String>>() {
+            @Override
+            public List<String> call(String s) throws Exception {
+                System.out.println(s);
+                return Arrays.asList(SPACE.split(s));
+            }
+        });
+        JavaPairRDD<String, Tuple2<Integer, Integer>> roomiduidPair =  t_room.mapToPair(new PairFunction<List<String>,String,Tuple2<Integer,Integer>>() {
+            @Override
+            public Tuple2<String, Tuple2<Integer,Integer>> call(List<String> strings) throws Exception {
+                Integer roomid =   Integer.parseInt(strings.get(0));
+                Integer uid = Integer.parseInt(strings.get(1));
+                return new  Tuple2<String, Tuple2<Integer,Integer>>("roomiduid",new Tuple2<Integer, Integer>(roomid,uid));
+            }
+        });
+        JavaPairRDD<String, Iterable<Tuple2<Integer, Integer>>> roomiduidRDD =   roomiduidPair.groupByKey();
+       return   jssc.sc().broadcast(roomiduidRDD);
+    }
     public static void main(String[] args) {
 
 
@@ -72,7 +96,7 @@ public class PeopleLiveScreenStatAlert {
         SparkConf sparkConf = new SparkConf().setAppName("PeopleLiveScreenStatAlert").setExecutorEnv("file.encoding","UTF-8");
         // Create the context with 60 seconds batch size
 
-        JavaStreamingContext jssc = new JavaStreamingContext(args[9],"PeopleLiveScreenStatAlert", new Duration(2000),System.getenv("SPARK_HOME"),JavaSparkContext.jarOfClass(PeopleLiveScreenStatAlert.class));
+       final JavaStreamingContext jssc = new JavaStreamingContext(args[9],"PeopleLiveScreenStatAlert", new Duration(2000),System.getenv("SPARK_HOME"),JavaSparkContext.jarOfClass(PeopleLiveScreenStatAlert.class));
 
 
 
@@ -86,11 +110,12 @@ public class PeopleLiveScreenStatAlert {
                 MqKafaUtil.createStream(jssc, args[1], topicMap, StorageLevel.MEMORY_AND_DISK_SER(), args[0]);
         //************************************线上用**************************************************
         final Accumulator<Integer> intAccumulator  = jssc.sc().intAccumulator(0);
+
         final Integer praisthreshold = Integer.parseInt(args[4]);
         final Integer chatthreshold = Integer.parseInt(args[5]);
         final String hbasekey = args[6];
         final Integer abandon =  Integer.parseInt(args[7]);
-        final  String roomiduid = args[8];
+        final  String roomiduidPath = args[8];
         JavaDStream<String> lines = messages.map(new Function<Tuple2<String, String>, String>() {
             @Override
             public String call(Tuple2<String, String> tuple2) throws IOException {
@@ -122,50 +147,23 @@ public class PeopleLiveScreenStatAlert {
                 return strings.size()>1000;
             }
         });
-
-         nothing.foreach(new Function2<JavaRDD<ArrayList<String>>, Time, Void>() {
+        JavaDStream<java.util.List<java.util.List<java.lang.String>>> sdf =   nothing.map(new Function<ArrayList<String>,  List<List<java.lang.String>> >() {
             @Override
-            public Void call(JavaRDD<ArrayList<String>> arrayListJavaRDD, Time time) throws Exception {
-                intAccumulator.add(1);
-                System.out.println("roomidUidMap.size()---------->"+roomidUidMap.size());
-                if(intAccumulator.value()%5==0)
-                {
-                    RDD<String> textFile = arrayListJavaRDD
-                            .rdd()
-                            .sparkContext()
+            public  List<List<java.lang.String>>  call(ArrayList<String> strings) throws Exception {
 
-                            .textFile(roomiduid, 1);
-                    JavaRDD<java.util.List<java.lang.String>> t_room =  textFile.toJavaRDD().map(new Function<String, List<String>>() {
-                        @Override
-                        public List<String> call(String s) throws Exception {
-                           System.out.println(s);
-                            return Arrays.asList(SPACE.split(s));
-                        }
-                    });
-                    JavaPairRDD<String, Tuple2<Integer, Integer>> roomiduidPair =  t_room.mapToPair(new PairFunction<List<String>,String,Tuple2<Integer,Integer>>() {
-                        @Override
-                        public Tuple2<String, Tuple2<Integer,Integer>> call(List<String> strings) throws Exception {
-                            Integer roomid =   Integer.parseInt(strings.get(0));
-                            Integer uid = Integer.parseInt(strings.get(1));
-                            return new  Tuple2<String, Tuple2<Integer,Integer>>("roomiduid",new Tuple2<Integer, Integer>(roomid,uid));
-                        }
-                    });
-                    roomiduidPair.groupByKey().mapValues(new Function<Iterable<Tuple2<Integer,Integer>>, Object>() {
-
-                        @Override
-                        public Object call(Iterable<Tuple2<Integer, Integer>> tuple2s) throws Exception {
-                            for(Tuple2<Integer, Integer> tuple2 : tuple2s)
-                            {
-                               System.out.println(tuple2._2()+"---->"+tuple2._1());
-                                roomidUidMap.put(tuple2._2(),tuple2._1());
-                            }
-                            return null;
-                        }
-                    }).count();
-                }
-                return null;
+                SparkContext ctx = jssc.sc().sc();
+                RDD<String> textFile = ctx.textFile(roomiduidPath, 1);
+                JavaRDD<java.util.List<java.lang.String>> t_room =  textFile.toJavaRDD().map(new Function<String, List<String>>() {
+                    @Override
+                    public List<String> call(String s) throws Exception {
+                        System.out.println(s);
+                        return Arrays.asList(SPACE.split(s));
+                    }
+                });
+                return t_room.collect();
             }
         });
+        sdf.print();
 /*//------------------------------点赞 t_user_praise_record-----------------------
         JavaDStream<ArrayList<String>> t_user_praise_record =     bigThen22.filter(new Function<ArrayList<String>, Boolean>() {
             @Override
