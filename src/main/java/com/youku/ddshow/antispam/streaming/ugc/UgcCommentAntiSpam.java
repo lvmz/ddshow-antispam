@@ -18,6 +18,8 @@ import org.apache.spark.streaming.api.java.JavaPairReceiverInputDStream;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.apache.spark.streaming.kafka.MqKafaUtil;
 import scala.Tuple2;
+import scala.Tuple3;
+import scala.Tuple5;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -57,8 +59,8 @@ public class UgcCommentAntiSpam {
             System.exit(1);
         }
         final  Long dutationg = Long.parseLong(args[5]);
-        final  Long window = Long.parseLong(args[6]);
-        final  Long split = Long.parseLong(args[7]);
+        final  Long commenterThreshold = Long.parseLong(args[6]);
+        final  Long contentThreshold = Long.parseLong(args[7]);
         SparkConf sparkConf = new SparkConf().setAppName("UgcCommentAntiSpam").setExecutorEnv("file.encoding","UTF-8");
         // Create the context with 60 seconds batch size
 
@@ -152,6 +154,36 @@ public class UgcCommentAntiSpam {
                 return ugcCommentLog;
             }
         });
+        JavaPairDStream<Integer, Tuple5<String,String,String,Integer,Long>> CommenterIdPairWithContent =  t_ugc_comment_level0_role129_Object.mapToPair(new PairFunction<UgcCommentLog, Integer, Tuple5<String,String,String,Integer,Long>>() {
+            @Override
+            public Tuple2<Integer, Tuple5<String,String,String,Integer,Long>> call(UgcCommentLog ugcCommentLog) throws Exception {
+                return new Tuple2<Integer, Tuple5<String,String,String,Integer,Long>>(ugcCommentLog.getCommenterId(),new Tuple5<String,String,String,Integer,Long>(ugcCommentLog.getIp(),ugcCommentLog.getToken(),ugcCommentLog.getContent(),ugcCommentLog.getUserLevel(),ugcCommentLog.getTimestamp()));
+            }
+        });
+        JavaPairDStream<String, Tuple5<String,String,String,Integer,Long>> ContentPairWithContent =  t_ugc_comment_level0_role129_Object.mapToPair(new PairFunction<UgcCommentLog, String, Tuple5<String,String,String,Integer,Long>>() {
+            @Override
+            public Tuple2<String, Tuple5<String,String,String,Integer,Long>> call(UgcCommentLog ugcCommentLog) throws Exception {
+                return new Tuple2<String, Tuple5<String,String,String,Integer,Long>>(ugcCommentLog.getContent(),new Tuple5<String,String,String,Integer,Long>(ugcCommentLog.getIp(),ugcCommentLog.getToken(),ugcCommentLog.getContent(),ugcCommentLog.getUserLevel(),ugcCommentLog.getTimestamp()));
+            }
+        });
+
+        JavaPairDStream<String, Tuple5<Integer,String,String,Integer,Long>> IpPairWithContent =  t_ugc_comment_level0_role129_Object.mapToPair(new PairFunction<UgcCommentLog, String, Tuple5<Integer,String,String,Integer,Long>>() {
+            @Override
+            public Tuple2<String, Tuple5<Integer,String,String,Integer,Long>> call(UgcCommentLog ugcCommentLog) throws Exception {
+                return new Tuple2<String, Tuple5<Integer,String,String,Integer,Long>>(ugcCommentLog.getIp(),new Tuple5<Integer,String,String,Integer,Long>(ugcCommentLog.getCommenterId(),ugcCommentLog.getToken(),ugcCommentLog.getContent(),ugcCommentLog.getUserLevel(),ugcCommentLog.getTimestamp()));
+            }
+        });
+
+        JavaPairDStream<String, Tuple5<String,Integer,String,Integer,Long>> TokenPairWithContent =  t_ugc_comment_level0_role129_Object.mapToPair(new PairFunction<UgcCommentLog, String, Tuple5<String,Integer,String,Integer,Long>>() {
+            @Override
+            public Tuple2<String, Tuple5<String,Integer,String,Integer,Long>> call(UgcCommentLog ugcCommentLog) throws Exception {
+                return new Tuple2<String, Tuple5<String,Integer,String,Integer,Long>>(ugcCommentLog.getToken(),new Tuple5<String,Integer,String,Integer,Long>(ugcCommentLog.getIp(),ugcCommentLog.getCommenterId(),ugcCommentLog.getContent(),ugcCommentLog.getUserLevel(),ugcCommentLog.getTimestamp()));
+            }
+        });
+
+
+
+
         JavaPairDStream<Integer, Integer> CommenterIdPair =  t_ugc_comment_level0_role129_Object.mapToPair(new PairFunction<UgcCommentLog, Integer, Integer>() {
             @Override
             public Tuple2<Integer, Integer> call(UgcCommentLog ugcCommentLog) throws Exception {
@@ -166,34 +198,84 @@ public class UgcCommentAntiSpam {
             }
         });
 
-        CommenterIdPair.reduceByKey(new Function2<Integer, Integer, Integer>() {
+        JavaPairDStream<String, Integer> IpPair =  t_ugc_comment_level0_role129_Object.mapToPair(new PairFunction<UgcCommentLog, String, Integer>() {
             @Override
-            public Integer call(Integer integer, Integer integer2) throws Exception {
-                return integer+integer2;
+            public Tuple2<String, Integer> call(UgcCommentLog ugcCommentLog) throws Exception {
+                return new Tuple2<String, Integer>(ugcCommentLog.getIp(),1);
             }
-        }).print(5000);
+        });
 
-        ContentPair.reduceByKey(new Function2<Integer, Integer, Integer>() {
-            @Override
-            public Integer call(Integer integer, Integer integer2) throws Exception {
-                return integer+integer2;
-            }
-        }).print(5000);
-      /*  CommenterIdPair.reduceByKeyAndWindow(new Function2<Integer, Integer, Integer>() {
-            @Override
-            public Integer call(Integer integer, Integer integer2) throws Exception {
-                return integer+integer2;
-            }
-        },new Duration(window),new Duration(split)).print(5000);
 
-        ContentPair.reduceByKeyAndWindow(new Function2<Integer, Integer, Integer>() {
+        JavaPairDStream<String, Integer> tokenPair =  t_ugc_comment_level0_role129_Object.mapToPair(new PairFunction<UgcCommentLog, String, Integer>() {
+            @Override
+            public Tuple2<String, Integer> call(UgcCommentLog ugcCommentLog) throws Exception {
+                return new Tuple2<String, Integer>(ugcCommentLog.getToken(),1);
+            }
+        });
+
+
+
+
+        JavaPairDStream<Integer, Integer> CommenterIdPairBigThanThreshold =       CommenterIdPair.reduceByKey(new Function2<Integer, Integer, Integer>() {
             @Override
             public Integer call(Integer integer, Integer integer2) throws Exception {
                 return integer+integer2;
             }
-        },new Duration(window),new Duration(split)).print(5000);*/
+        }).filter(new Function<Tuple2<Integer, Integer>, Boolean>() {
+              @Override
+              public Boolean call(Tuple2<Integer, Integer> integerIntegerTuple2) throws Exception {
+                  return integerIntegerTuple2._2()>commenterThreshold;
+              }
+          });
 
-        t_ugc_comment_level0_role129_Object.print(5000);
+
+
+        JavaPairDStream<String, Integer> ContentPairigBigThanThreshold =    ContentPair.reduceByKey(new Function2<Integer, Integer, Integer>() {
+            @Override
+            public Integer call(Integer integer, Integer integer2) throws Exception {
+                return integer+integer2;
+            }
+        }).filter(new Function<Tuple2<String, Integer>, Boolean>() {
+            @Override
+            public Boolean call(Tuple2<String, Integer> integerIntegerTuple2) throws Exception {
+                return integerIntegerTuple2._2()>contentThreshold;
+            }
+        });
+
+        JavaPairDStream<String, Integer> IpPairigBigThanThreshold =    IpPair.reduceByKey(new Function2<Integer, Integer, Integer>() {
+            @Override
+            public Integer call(Integer integer, Integer integer2) throws Exception {
+                return integer+integer2;
+            }
+        }).filter(new Function<Tuple2<String, Integer>, Boolean>() {
+            @Override
+            public Boolean call(Tuple2<String, Integer> integerIntegerTuple2) throws Exception {
+                return integerIntegerTuple2._2()>contentThreshold;
+            }
+        });
+
+        JavaPairDStream<String, Integer> TokenPairigBigThanThreshold =    tokenPair.reduceByKey(new Function2<Integer, Integer, Integer>() {
+            @Override
+            public Integer call(Integer integer, Integer integer2) throws Exception {
+                return integer+integer2;
+            }
+        }).filter(new Function<Tuple2<String, Integer>, Boolean>() {
+            @Override
+            public Boolean call(Tuple2<String, Integer> integerIntegerTuple2) throws Exception {
+                return integerIntegerTuple2._2()>contentThreshold;
+            }
+        });
+
+
+        CommenterIdPairBigThanThreshold.print(5000);
+        ContentPairigBigThanThreshold.print(5000);
+        IpPairigBigThanThreshold.print(5000);
+        TokenPairigBigThanThreshold.print(5000);
+        CommenterIdPairBigThanThreshold.leftOuterJoin(CommenterIdPairWithContent).print(5000);
+        ContentPairigBigThanThreshold.leftOuterJoin(ContentPairWithContent).print(5000);
+        IpPairigBigThanThreshold.leftOuterJoin(IpPairWithContent).print(5000);
+        TokenPairigBigThanThreshold.leftOuterJoin(TokenPairWithContent).print(5000);
+
         jssc.start();
         jssc.awaitTermination();
     }
