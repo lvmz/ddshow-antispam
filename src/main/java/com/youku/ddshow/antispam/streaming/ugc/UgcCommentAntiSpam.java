@@ -61,6 +61,8 @@ public class UgcCommentAntiSpam {
         final  Long dutationg = Long.parseLong(args[5]);
         final  Long commenterThreshold = Long.parseLong(args[6]);
         final  Long contentThreshold = Long.parseLong(args[7]);
+        final  Long commenterThreshold10hper1h = Long.parseLong(args[8]);
+        final  Long contentThreshold10h10hper1h = Long.parseLong(args[9]);
         SparkConf sparkConf = new SparkConf().setAppName("UgcCommentAntiSpam").setExecutorEnv("file.encoding","UTF-8");
         // Create the context with 60 seconds batch size
 
@@ -267,14 +269,70 @@ public class UgcCommentAntiSpam {
         });
 
 
+        JavaPairDStream<Integer, Integer> CommenterIdPairBigThanThreshold10hper1h =       CommenterIdPair.reduceByKeyAndWindow(new Function2<Integer, Integer, Integer>() {
+            @Override
+            public Integer call(Integer integer, Integer integer2) throws Exception {
+                return integer+integer2;
+            }
+        },new Duration(36000000),new Duration(3600000)).filter(new Function<Tuple2<Integer, Integer>, Boolean>() {
+            @Override
+            public Boolean call(Tuple2<Integer, Integer> integerIntegerTuple2) throws Exception {
+                return integerIntegerTuple2._2()>commenterThreshold10hper1h;
+            }
+        });
+
+
+
+        JavaPairDStream<String, Integer> ContentPairigBigThanThreshold10hper1h =    ContentPair.reduceByKeyAndWindow(new Function2<Integer, Integer, Integer>() {
+            @Override
+            public Integer call(Integer integer, Integer integer2) throws Exception {
+                return integer+integer2;
+            }
+        },new Duration(36000000),new Duration(3600000)).filter(new Function<Tuple2<String, Integer>, Boolean>() {
+            @Override
+            public Boolean call(Tuple2<String, Integer> integerIntegerTuple2) throws Exception {
+                return integerIntegerTuple2._2()>contentThreshold10h10hper1h;
+            }
+        });
+
+        JavaPairDStream<String, Integer> IpPairigBigThanThreshold10hper1h =    IpPair.reduceByKeyAndWindow(new Function2<Integer, Integer, Integer>() {
+            @Override
+            public Integer call(Integer integer, Integer integer2) throws Exception {
+                return integer+integer2;
+            }
+        },new Duration(36000000),new Duration(3600000)).filter(new Function<Tuple2<String, Integer>, Boolean>() {
+            @Override
+            public Boolean call(Tuple2<String, Integer> integerIntegerTuple2) throws Exception {
+                return integerIntegerTuple2._2()>contentThreshold10h10hper1h;
+            }
+        });
+
+        JavaPairDStream<String, Integer> TokenPairigBigThanThreshold10hper1h =    tokenPair.reduceByKeyAndWindow(new Function2<Integer, Integer, Integer>() {
+            @Override
+            public Integer call(Integer integer, Integer integer2) throws Exception {
+                return integer+integer2;
+            }
+        },new Duration(36000000),new Duration(3600000)).filter(new Function<Tuple2<String, Integer>, Boolean>() {
+            @Override
+            public Boolean call(Tuple2<String, Integer> integerIntegerTuple2) throws Exception {
+                return integerIntegerTuple2._2()>contentThreshold10h10hper1h;
+            }
+        });
+
+
         CommenterIdPairBigThanThreshold.print(5000);
         ContentPairigBigThanThreshold.print(5000);
         IpPairigBigThanThreshold.print(5000);
         TokenPairigBigThanThreshold.print(5000);
+        CommenterIdPairBigThanThreshold10hper1h.print(5000);
+        ContentPairigBigThanThreshold10hper1h.print(5000);
+        IpPairigBigThanThreshold10hper1h.print(5000);
+        TokenPairigBigThanThreshold10hper1h.print(5000);
         CommenterIdPairBigThanThreshold.leftOuterJoin(CommenterIdPairWithContent).print(5000);
         ContentPairigBigThanThreshold.leftOuterJoin(ContentPairWithContent).print(5000);
         IpPairigBigThanThreshold.leftOuterJoin(IpPairWithContent).print(5000);
         TokenPairigBigThanThreshold.leftOuterJoin(TokenPairWithContent).print(5000);
+
 
         jssc.start();
         jssc.awaitTermination();
