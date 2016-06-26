@@ -118,7 +118,7 @@ public class UgcCommentAntiSpamByContent {
                 return strings.get(6).equals("t_ugc_comment");
             }
         });
-        JavaDStream<ArrayList<String>> t_ugc_comment_level0_role129 =     t_ugc_comment.filter(new Function<ArrayList<String>, Boolean>() {
+       /* JavaDStream<ArrayList<String>> t_ugc_comment_level0_role129 =     t_ugc_comment.filter(new Function<ArrayList<String>, Boolean>() {
             @Override
             public Boolean call(ArrayList<String> strings) throws Exception {
                 if(StringUtils.isNotBlank(strings.get(7)))
@@ -142,8 +142,8 @@ public class UgcCommentAntiSpamByContent {
                     return false;
                 }
             }
-        });
-        JavaDStream<UgcCommentLog> t_ugc_comment_level0_role129_Object =   t_ugc_comment_level0_role129.map(new Function<ArrayList<String>, UgcCommentLog>() {
+        });*/
+        JavaDStream<UgcCommentLog> t_ugc_comment_level0_role129_Object =   t_ugc_comment.map(new Function<ArrayList<String>, UgcCommentLog>() {
             @Override
             public UgcCommentLog call(ArrayList<String> strings) throws Exception {
                 UgcCommentLog ugcCommentLog = new UgcCommentLog();
