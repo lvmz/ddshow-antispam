@@ -18,6 +18,7 @@ import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.PairFunction;
 import org.apache.spark.api.java.function.VoidFunction;
+import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.storage.StorageLevel;
 import org.apache.spark.streaming.Duration;
 import org.apache.spark.streaming.Time;
@@ -39,7 +40,7 @@ import java.util.regex.Pattern;
  */
 public class UgcCommentAntiSpamByContent {
     private static final Pattern SPACE = Pattern.compile("\t");
-    private static Database _db = new Database(PropertiesType.DDSHOW_STAT_ONLINE);;
+    private static Database _db = null;
     public static void main(String[] args) {
         //************************************开发用**************************************************
        /* if (args.length < 5) {
@@ -66,12 +67,15 @@ public class UgcCommentAntiSpamByContent {
             System.err.println("Usage: UgcCommentAntiSpam <token> <group> <topics> <numThreads> <master> <dutationg>");
             System.exit(1);
         }
-        _db  =  new Database(PropertiesType.DDSHOW_STAT_ONLINE);
+
+
         final  Long dutationg = Long.parseLong(args[5]);
         SparkConf sparkConf = new SparkConf().setAppName("UgcCommentAntiSpam").setExecutorEnv("file.encoding","UTF-8");
         // Create the context with 60 seconds batch size
 
         final JavaStreamingContext jssc = new JavaStreamingContext(args[4],"UgcCommentAntiSpam", new Duration(dutationg),System.getenv("SPARK_HOME"), JavaSparkContext.jarOfClass(UgcCommentAntiSpamByContent.class));
+        _db  =  new Database(PropertiesType.DDSHOW_STAT_ONLINE);
+        Broadcast<Database> broadcast   =   jssc.sc().broadcast(_db);
 
         int numThreads = Integer.parseInt(args[3]);
         Map<String, Integer> topicMap = new HashMap<String, Integer>();
@@ -184,16 +188,17 @@ public class UgcCommentAntiSpamByContent {
                     @Override
                     public void call(UgcCommentLog ugcCommentLog) throws Exception {
                         System.out.println("spamcontenwithkeyword-------->"+ugcCommentLog.getContent());
-                        if(_db!=null)
+                        Database db175 =   broadcast.getValue();
+                        if(db175!=null)
                         {
-                            synchronized(_db){
-                                _db.execute(String.format("insert into t_result_ugc_antispam_online (commenterId,ip,device_token,user_name,commentId,content,stat_time,user_level) values ('%s','%s','%s','%s','%s','%s','%s','%s');"
+                            synchronized(db175){
+                                db175.execute(String.format("insert into t_result_ugc_antispam_online (commenterId,ip,device_token,user_name,commentId,content,stat_time,user_level) values ('%s','%s','%s','%s','%s','%s','%s','%s');"
                                         ,ugcCommentLog.getCommenterId(), ugcCommentLog.getIp(), ugcCommentLog.getToken(), ugcCommentLog.getNickName()+"_keyword", ugcCommentLog.getCommentId(),
                                         ugcCommentLog.getContent(), CalendarUtil.getDetailDateFormat(ugcCommentLog.getTimestamp()),ugcCommentLog.getUserLevel()));
                             }
                         }else
                         {
-                            System.out.println("_db is null!");
+                            System.out.println("db175 is null!");
                         }
                     }
                 });
