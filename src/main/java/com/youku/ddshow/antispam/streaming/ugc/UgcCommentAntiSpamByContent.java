@@ -164,6 +164,7 @@ public class UgcCommentAntiSpamByContent {
                 return ugcCommentLog;
             }
         });
+        t_ugc_comment.print(5000);
         t_ugc_comment_level0_role129_Object.filter(new Function<UgcCommentLog, Boolean>() {
             @Override
             public Boolean call(UgcCommentLog ugcCommentLog) throws Exception {
