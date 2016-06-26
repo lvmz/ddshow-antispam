@@ -39,7 +39,7 @@ import java.util.regex.Pattern;
  */
 public class UgcCommentAntiSpamByContent {
     private static final Pattern SPACE = Pattern.compile("\t");
-    private static Database _db = null;
+    private static Database _db = new Database(PropertiesType.DDSHOW_STAT_ONLINE);;
     public static void main(String[] args) {
         //************************************开发用**************************************************
        /* if (args.length < 5) {
