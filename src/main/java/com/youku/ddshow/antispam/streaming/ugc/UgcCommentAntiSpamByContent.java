@@ -172,26 +172,28 @@ public class UgcCommentAntiSpamByContent {
             }
         }).print(5000);
 
-        t_ugc_comment_level0_role129_Object.foreach(new Function2<JavaRDD<UgcCommentLog>, Time, Void>() {
+        t_ugc_comment_level0_role129_Object.filter(new Function<UgcCommentLog, Boolean>() {
+            @Override
+            public Boolean call(UgcCommentLog ugcCommentLog) throws Exception {
+                return ContentKeyWordFilter.isSpamNickName(ugcCommentLog.getContent());
+            }
+        }).foreach(new Function2<JavaRDD<UgcCommentLog>, Time, Void>() {
             @Override
             public Void call(JavaRDD<UgcCommentLog> ugcCommentLogJavaRDD, Time time) throws Exception {
                 ugcCommentLogJavaRDD.foreach(new VoidFunction<UgcCommentLog>() {
                     @Override
                     public void call(UgcCommentLog ugcCommentLog) throws Exception {
-                        if(ContentKeyWordFilter.isSpamNickName(ugcCommentLog.getContent()))
+                        System.out.println("spamcontenwithkeyword-------->"+ugcCommentLog.getContent());
+                        if(_db!=null)
                         {
-
-                            if(_db!=null)
-                            {
-                                synchronized(_db){
-                                    _db.execute(String.format("insert into t_result_ugc_antispam_online (commenterId,ip,device_token,user_name,commentId,content,stat_time,user_level) values ('%s','%s','%s','%s','%s','%s','%s','%s');"
-                                            ,ugcCommentLog.getCommenterId(), ugcCommentLog.getIp(), ugcCommentLog.getToken(), ugcCommentLog.getNickName()+"_keyword", ugcCommentLog.getCommentId(),
-                                            ugcCommentLog.getContent(), CalendarUtil.getDetailDateFormat(ugcCommentLog.getTimestamp()),ugcCommentLog.getUserLevel()));
-                                }
-                            }else
-                            {
-                                System.out.println("_db is null!");
+                            synchronized(_db){
+                                _db.execute(String.format("insert into t_result_ugc_antispam_online (commenterId,ip,device_token,user_name,commentId,content,stat_time,user_level) values ('%s','%s','%s','%s','%s','%s','%s','%s');"
+                                        ,ugcCommentLog.getCommenterId(), ugcCommentLog.getIp(), ugcCommentLog.getToken(), ugcCommentLog.getNickName()+"_keyword", ugcCommentLog.getCommentId(),
+                                        ugcCommentLog.getContent(), CalendarUtil.getDetailDateFormat(ugcCommentLog.getTimestamp()),ugcCommentLog.getUserLevel()));
                             }
+                        }else
+                        {
+                            System.out.println("_db is null!");
                         }
                     }
                 });
