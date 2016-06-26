@@ -1,6 +1,7 @@
 package com.youku.ddshow.antispam.utils;
 
 import java.io.InputStream;
+import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -16,7 +17,7 @@ import org.slf4j.LoggerFactory;
 import com.alibaba.druid.pool.DruidDataSourceFactory;
 import com.youku.ddshow.antispam.model.PropertiesType;
 
-public final class Database {
+public final class Database  implements Serializable {
 	private DataSource ds = null;
 	private Connection connection = null;
 	private PropertiesType properties = null;
