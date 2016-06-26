@@ -75,7 +75,7 @@ public class UgcCommentAntiSpamByContent {
 
         final JavaStreamingContext jssc = new JavaStreamingContext(args[4],"UgcCommentAntiSpam", new Duration(dutationg),System.getenv("SPARK_HOME"), JavaSparkContext.jarOfClass(UgcCommentAntiSpamByContent.class));
         _db  =  new Database(PropertiesType.DDSHOW_STAT_ONLINE);
-        Broadcast<Database> broadcast   =   jssc.sc().broadcast(_db);
+       final Broadcast<Database> broadcast   =   jssc.sc().broadcast(_db);
 
         int numThreads = Integer.parseInt(args[3]);
         Map<String, Integer> topicMap = new HashMap<String, Integer>();
