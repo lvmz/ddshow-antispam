@@ -341,17 +341,29 @@ public class UgcCommentAntiSpam {
         CommenterIdPairBigThanThreshold10hper1h.leftOuterJoin(CommenterIdPairWithContent).foreachRDD(new Function2<JavaPairRDD<Integer, Tuple2<Integer, Optional<UgcCommentLog>>>, Time, Void>() {
             @Override
             public Void call(JavaPairRDD<Integer, Tuple2<Integer, Optional<UgcCommentLog>>> integerTuple2JavaPairRDD, Time time) throws Exception {
-                integerTuple2JavaPairRDD.values().foreach(new VoidFunction<Tuple2<Integer, Optional<UgcCommentLog>>>() {
+
+
+                integerTuple2JavaPairRDD.foreach(new VoidFunction<Tuple2<Integer, Tuple2<Integer, Optional<UgcCommentLog>>>>() {
                     @Override
-                    public void call(Tuple2<Integer, Optional<UgcCommentLog>> integerOptionalTuple2) throws Exception {
-                        Optional<UgcCommentLog> optional =  integerOptionalTuple2._2();
-                        UgcCommentLog ugcCommentLog = optional.orNull();
-                        if(ugcCommentLog!=null)
+                    public void call(Tuple2<Integer, Tuple2<Integer, Optional<UgcCommentLog>>> integerTuple2Tuple2) throws Exception {
+                        Tuple2<Integer, Optional<UgcCommentLog>> tuple = integerTuple2Tuple2._2();
+                        if(tuple!=null)
                         {
-                            synchronized(_db){
-                                _db.execute(String.format("insert into t_result_ugc_antispam_online (commenterId,ip,device_token,user_name,commentId,content,stat_time,user_level) values ('%s','%s','%s','%s','%s','%s','%s','%s');"
-                                        ,ugcCommentLog.getCommenterId(), ugcCommentLog.getIp(), ugcCommentLog.getToken(), ugcCommentLog.getNickName(), ugcCommentLog.getCommentId(),
-                                        ugcCommentLog.getContent(), CalendarUtil.getDetailDateFormat(ugcCommentLog.getTimestamp()),ugcCommentLog.getUserLevel()));
+                            Optional<UgcCommentLog> optional =  tuple._2();
+                            UgcCommentLog ugcCommentLog = optional.orNull();
+                            if(ugcCommentLog!=null)
+                            {
+                                if(_db!=null)
+                                {
+                                    synchronized(_db){
+                                        _db.execute(String.format("insert into t_result_ugc_antispam_online (commenterId,ip,device_token,user_name,commentId,content,stat_time,user_level) values ('%s','%s','%s','%s','%s','%s','%s','%s');"
+                                                ,ugcCommentLog.getCommenterId(), ugcCommentLog.getIp(), ugcCommentLog.getToken(), ugcCommentLog.getNickName(), ugcCommentLog.getCommentId(),
+                                                ugcCommentLog.getContent(), CalendarUtil.getDetailDateFormat(ugcCommentLog.getTimestamp()),ugcCommentLog.getUserLevel()));
+                                    }
+                                }else
+                                {
+                                    System.out.println("_db is null!");
+                                }
                             }
                         }
                     }
@@ -363,6 +375,33 @@ public class UgcCommentAntiSpam {
         ContentPairigBigThanThreshold10hper1h.leftOuterJoin(ContentPairWithContent).foreachRDD(new Function2<JavaPairRDD<String, Tuple2<Integer, Optional<UgcCommentLog>>>, Time, Void>() {
             @Override
             public Void call(JavaPairRDD<String, Tuple2<Integer, Optional<UgcCommentLog>>> stringTuple2JavaPairRDD, Time time) throws Exception {
+                stringTuple2JavaPairRDD.foreach(new VoidFunction<Tuple2<String, Tuple2<Integer, Optional<UgcCommentLog>>>>() {
+                    @Override
+                    public void call(Tuple2<String, Tuple2<Integer, Optional<UgcCommentLog>>> stringTuple2Tuple2) throws Exception {
+
+                        Tuple2<Integer, Optional<UgcCommentLog>> tuple = stringTuple2Tuple2._2();
+                        if(tuple!=null)
+                        {
+                            Optional<UgcCommentLog> optional =  tuple._2();
+                            UgcCommentLog ugcCommentLog = optional.orNull();
+                            if(ugcCommentLog!=null)
+                            {
+                                if(_db!=null)
+                                {
+                                    synchronized(_db){
+                                        _db.execute(String.format("insert into t_result_ugc_antispam_online (commenterId,ip,device_token,user_name,commentId,content,stat_time,user_level) values ('%s','%s','%s','%s','%s','%s','%s','%s');"
+                                                ,ugcCommentLog.getCommenterId(), ugcCommentLog.getIp(), ugcCommentLog.getToken(), ugcCommentLog.getNickName(), ugcCommentLog.getCommentId(),
+                                                ugcCommentLog.getContent(), CalendarUtil.getDetailDateFormat(ugcCommentLog.getTimestamp()),ugcCommentLog.getUserLevel()));
+                                    }
+                                }else
+                                {
+                                    System.out.println("_db is null!");
+                                }
+                            }
+                        }
+                    }
+                });
+
                 stringTuple2JavaPairRDD.values().foreach(new VoidFunction<Tuple2<Integer, Optional<UgcCommentLog>>>() {
                     @Override
                     public void call(Tuple2<Integer, Optional<UgcCommentLog>> integerOptionalTuple2) throws Exception {
@@ -386,20 +425,29 @@ public class UgcCommentAntiSpam {
         IpPairigBigThanThreshold10hper1h.leftOuterJoin(IpPairWithContent).foreachRDD(new Function2<JavaPairRDD<String, Tuple2<Integer, Optional<UgcCommentLog>>>, Time, Void>() {
             @Override
             public Void call(JavaPairRDD<String, Tuple2<Integer, Optional<UgcCommentLog>>> stringTuple2JavaPairRDD, Time time) throws Exception {
-                stringTuple2JavaPairRDD.values().foreach(new VoidFunction<Tuple2<Integer, Optional<UgcCommentLog>>>() {
+                stringTuple2JavaPairRDD.foreach(new VoidFunction<Tuple2<String, Tuple2<Integer, Optional<UgcCommentLog>>>>() {
                     @Override
-                    public void call(Tuple2<Integer, Optional<UgcCommentLog>> integerOptionalTuple2) throws Exception {
-                        Optional<UgcCommentLog> optional =  integerOptionalTuple2._2();
-                        UgcCommentLog ugcCommentLog = optional.orNull();
-                        if(ugcCommentLog!=null)
+                    public void call(Tuple2<String, Tuple2<Integer, Optional<UgcCommentLog>>> stringTuple2Tuple2) throws Exception {
+                        Tuple2<Integer, Optional<UgcCommentLog>> tuple = stringTuple2Tuple2._2();
+                        if(tuple!=null)
                         {
-                            synchronized(_db){
-                                _db.execute(String.format("insert into t_result_ugc_antispam_online (commenterId,ip,device_token,user_name,commentId,content,stat_time,user_level) values ('%s','%s','%s','%s','%s','%s','%s','%s');"
-                                        ,ugcCommentLog.getCommenterId(), ugcCommentLog.getIp(), ugcCommentLog.getToken(), ugcCommentLog.getNickName(), ugcCommentLog.getCommentId(),
-                                        ugcCommentLog.getContent(), CalendarUtil.getDetailDateFormat(ugcCommentLog.getTimestamp()),ugcCommentLog.getUserLevel()));
+                            Optional<UgcCommentLog> optional =  tuple._2();
+                            UgcCommentLog ugcCommentLog = optional.orNull();
+                            if(ugcCommentLog!=null)
+                            {
+                                if(_db!=null)
+                                {
+                                    synchronized(_db){
+                                        _db.execute(String.format("insert into t_result_ugc_antispam_online (commenterId,ip,device_token,user_name,commentId,content,stat_time,user_level) values ('%s','%s','%s','%s','%s','%s','%s','%s');"
+                                                ,ugcCommentLog.getCommenterId(), ugcCommentLog.getIp(), ugcCommentLog.getToken(), ugcCommentLog.getNickName(), ugcCommentLog.getCommentId(),
+                                                ugcCommentLog.getContent(), CalendarUtil.getDetailDateFormat(ugcCommentLog.getTimestamp()),ugcCommentLog.getUserLevel()));
+                                    }
+                                }else
+                                {
+                                    System.out.println("_db is null!");
+                                }
                             }
                         }
-
                     }
                 });
                 return null;
@@ -409,17 +457,27 @@ public class UgcCommentAntiSpam {
         TokenPairigBigThanThreshold10hper1h.leftOuterJoin(TokenPairWithContent).foreachRDD(new Function2<JavaPairRDD<String, Tuple2<Integer, Optional<UgcCommentLog>>>, Time, Void>() {
             @Override
             public Void call(JavaPairRDD<String, Tuple2<Integer, Optional<UgcCommentLog>>> stringTuple2JavaPairRDD, Time time) throws Exception {
-                stringTuple2JavaPairRDD.values().foreach(new VoidFunction<Tuple2<Integer, Optional<UgcCommentLog>>>() {
+                stringTuple2JavaPairRDD.foreach(new VoidFunction<Tuple2<String, Tuple2<Integer, Optional<UgcCommentLog>>>>() {
                     @Override
-                    public void call(Tuple2<Integer, Optional<UgcCommentLog>> integerOptionalTuple2) throws Exception {
-                        Optional<UgcCommentLog> optional =  integerOptionalTuple2._2();
-                        UgcCommentLog ugcCommentLog = optional.orNull();
-                        if(ugcCommentLog!=null)
+                    public void call(Tuple2<String, Tuple2<Integer, Optional<UgcCommentLog>>> stringTuple2Tuple2) throws Exception {
+                        Tuple2<Integer, Optional<UgcCommentLog>> tuple = stringTuple2Tuple2._2();
+                        if(tuple!=null)
                         {
-                            synchronized(_db){
-                                _db.execute(String.format("insert into t_result_ugc_antispam_online (commenterId,ip,device_token,user_name,commentId,content,stat_time,user_level) values ('%s','%s','%s','%s','%s','%s','%s','%s');"
-                                        ,ugcCommentLog.getCommenterId(), ugcCommentLog.getIp(), ugcCommentLog.getToken(), ugcCommentLog.getNickName(), ugcCommentLog.getCommentId(),
-                                        ugcCommentLog.getContent(), CalendarUtil.getDetailDateFormat(ugcCommentLog.getTimestamp()),ugcCommentLog.getUserLevel()));
+                            Optional<UgcCommentLog> optional =  tuple._2();
+                            UgcCommentLog ugcCommentLog = optional.orNull();
+                            if(ugcCommentLog!=null)
+                            {
+                                if(_db!=null)
+                                {
+                                    synchronized(_db){
+                                        _db.execute(String.format("insert into t_result_ugc_antispam_online (commenterId,ip,device_token,user_name,commentId,content,stat_time,user_level) values ('%s','%s','%s','%s','%s','%s','%s','%s');"
+                                                ,ugcCommentLog.getCommenterId(), ugcCommentLog.getIp(), ugcCommentLog.getToken(), ugcCommentLog.getNickName(), ugcCommentLog.getCommentId(),
+                                                ugcCommentLog.getContent(), CalendarUtil.getDetailDateFormat(ugcCommentLog.getTimestamp()),ugcCommentLog.getUserLevel()));
+                                    }
+                                }else
+                                {
+                                    System.out.println("_db is null!");
+                                }
                             }
                         }
                     }

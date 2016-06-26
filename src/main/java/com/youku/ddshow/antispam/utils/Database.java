@@ -50,12 +50,12 @@ public final class Database {
 	        try {
 	            connection = this.getConnection();
 	        } catch (SQLException e) {
-	            LOG.error("execute:" + e.getMessage());
+	            LOG.error("mysql execute:" + e.getMessage());
 	        }
 	    }
 
 		if (this.connection == null) {
-		    LOG.error("execute:conn get failed. drop sql:" + sql);
+		    LOG.error("mysql execute:conn get failed. drop sql:" + sql);
 			return;
 		}
 		
