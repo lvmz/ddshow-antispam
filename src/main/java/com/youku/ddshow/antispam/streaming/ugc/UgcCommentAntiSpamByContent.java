@@ -63,15 +63,11 @@ public class UgcCommentAntiSpamByContent {
 
         //************************************线上用**************************************************
         if (args.length < 5) {
-            System.err.println("Usage: UgcCommentAntiSpam <token> <group> <topics> <numThreads> <master> <dutationg> <window> <split>");
+            System.err.println("Usage: UgcCommentAntiSpam <token> <group> <topics> <numThreads> <master> <dutationg>");
             System.exit(1);
         }
         _db  =  new Database(PropertiesType.DDSHOW_STAT_ONLINE);
         final  Long dutationg = Long.parseLong(args[5]);
-        final  Long commenterThreshold = Long.parseLong(args[6]);
-        final  Long contentThreshold = Long.parseLong(args[7]);
-        final  Long commenterThreshold10hper1h = Long.parseLong(args[8]);
-        final  Long contentThreshold10h10hper1h = Long.parseLong(args[9]);
         SparkConf sparkConf = new SparkConf().setAppName("UgcCommentAntiSpam").setExecutorEnv("file.encoding","UTF-8");
         // Create the context with 60 seconds batch size
 
