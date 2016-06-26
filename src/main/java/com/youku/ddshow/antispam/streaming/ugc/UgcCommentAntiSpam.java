@@ -1,17 +1,24 @@
 package com.youku.ddshow.antispam.streaming.ugc;
 
 import com.alibaba.fastjson.JSONObject;
+import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
+import com.youku.ddshow.antispam.model.PropertiesType;
 import com.youku.ddshow.antispam.model.UgcCommentLog;
+import com.youku.ddshow.antispam.utils.CalendarUtil;
+import com.youku.ddshow.antispam.utils.Database;
 import com.youku.ddshow.antispam.utils.LogUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.PairFunction;
+import org.apache.spark.api.java.function.VoidFunction;
 import org.apache.spark.storage.StorageLevel;
 import org.apache.spark.streaming.Duration;
+import org.apache.spark.streaming.Time;
 import org.apache.spark.streaming.api.java.JavaDStream;
 import org.apache.spark.streaming.api.java.JavaPairDStream;
 import org.apache.spark.streaming.api.java.JavaPairReceiverInputDStream;
@@ -32,6 +39,7 @@ import java.util.regex.Pattern;
  */
 public class UgcCommentAntiSpam {
     private static final Pattern SPACE = Pattern.compile("\t");
+    private static Database _db = null;
     public static void main(String[] args) {
         //************************************开发用**************************************************
        /* if (args.length < 5) {
@@ -58,6 +66,7 @@ public class UgcCommentAntiSpam {
             System.err.println("Usage: UgcCommentAntiSpam <token> <group> <topics> <numThreads> <master> <dutationg> <window> <split>");
             System.exit(1);
         }
+        _db  =  new Database(PropertiesType.DDSHOW_STAT_ONLINE);
         final  Long dutationg = Long.parseLong(args[5]);
         final  Long commenterThreshold = Long.parseLong(args[6]);
         final  Long contentThreshold = Long.parseLong(args[7]);
@@ -156,35 +165,32 @@ public class UgcCommentAntiSpam {
                 return ugcCommentLog;
             }
         });
-        JavaPairDStream<Integer, Tuple5<String,String,String,Integer,Long>> CommenterIdPairWithContent =  t_ugc_comment_level0_role129_Object.mapToPair(new PairFunction<UgcCommentLog, Integer, Tuple5<String,String,String,Integer,Long>>() {
+        JavaPairDStream<Integer, UgcCommentLog> CommenterIdPairWithContent =  t_ugc_comment_level0_role129_Object.mapToPair(new PairFunction<UgcCommentLog, Integer, UgcCommentLog>() {
             @Override
-            public Tuple2<Integer, Tuple5<String,String,String,Integer,Long>> call(UgcCommentLog ugcCommentLog) throws Exception {
-                return new Tuple2<Integer, Tuple5<String,String,String,Integer,Long>>(ugcCommentLog.getCommenterId(),new Tuple5<String,String,String,Integer,Long>(ugcCommentLog.getIp(),ugcCommentLog.getToken(),ugcCommentLog.getContent(),ugcCommentLog.getCommentId(),ugcCommentLog.getTimestamp()));
+            public Tuple2<Integer, UgcCommentLog> call(UgcCommentLog ugcCommentLog) throws Exception {
+                return new Tuple2<Integer, UgcCommentLog>(ugcCommentLog.getCommenterId(),ugcCommentLog);
             }
         });
-        JavaPairDStream<String, Tuple5<String,String,String,Integer,Long>> ContentPairWithContent =  t_ugc_comment_level0_role129_Object.mapToPair(new PairFunction<UgcCommentLog, String, Tuple5<String,String,String,Integer,Long>>() {
+        JavaPairDStream<String, UgcCommentLog> ContentPairWithContent =  t_ugc_comment_level0_role129_Object.mapToPair(new PairFunction<UgcCommentLog, String, UgcCommentLog>() {
             @Override
-            public Tuple2<String, Tuple5<String,String,String,Integer,Long>> call(UgcCommentLog ugcCommentLog) throws Exception {
-                return new Tuple2<String, Tuple5<String,String,String,Integer,Long>>(ugcCommentLog.getContent(),new Tuple5<String,String,String,Integer,Long>(ugcCommentLog.getIp(),ugcCommentLog.getToken(),ugcCommentLog.getContent(),ugcCommentLog.getCommentId(),ugcCommentLog.getTimestamp()));
-            }
-        });
-
-        JavaPairDStream<String, Tuple5<Integer,String,String,Integer,Long>> IpPairWithContent =  t_ugc_comment_level0_role129_Object.mapToPair(new PairFunction<UgcCommentLog, String, Tuple5<Integer,String,String,Integer,Long>>() {
-            @Override
-            public Tuple2<String, Tuple5<Integer,String,String,Integer,Long>> call(UgcCommentLog ugcCommentLog) throws Exception {
-                return new Tuple2<String, Tuple5<Integer,String,String,Integer,Long>>(ugcCommentLog.getIp(),new Tuple5<Integer,String,String,Integer,Long>(ugcCommentLog.getCommenterId(),ugcCommentLog.getToken(),ugcCommentLog.getContent(),ugcCommentLog.getCommentId(),ugcCommentLog.getTimestamp()));
+            public Tuple2<String, UgcCommentLog> call(UgcCommentLog ugcCommentLog) throws Exception {
+                return new Tuple2<String, UgcCommentLog>(ugcCommentLog.getContent(),ugcCommentLog);
             }
         });
 
-        JavaPairDStream<String, Tuple5<String,Integer,String,Integer,Long>> TokenPairWithContent =  t_ugc_comment_level0_role129_Object.mapToPair(new PairFunction<UgcCommentLog, String, Tuple5<String,Integer,String,Integer,Long>>() {
+        JavaPairDStream<String, UgcCommentLog> IpPairWithContent =  t_ugc_comment_level0_role129_Object.mapToPair(new PairFunction<UgcCommentLog, String, UgcCommentLog>() {
             @Override
-            public Tuple2<String, Tuple5<String,Integer,String,Integer,Long>> call(UgcCommentLog ugcCommentLog) throws Exception {
-                return new Tuple2<String, Tuple5<String,Integer,String,Integer,Long>>(ugcCommentLog.getToken(),new Tuple5<String,Integer,String,Integer,Long>(ugcCommentLog.getIp(),ugcCommentLog.getCommenterId(),ugcCommentLog.getContent(),ugcCommentLog.getCommentId(),ugcCommentLog.getTimestamp()));
+            public Tuple2<String, UgcCommentLog> call(UgcCommentLog ugcCommentLog) throws Exception {
+                return new Tuple2<String, UgcCommentLog>(ugcCommentLog.getIp(),ugcCommentLog);
             }
         });
 
-
-
+        JavaPairDStream<String, UgcCommentLog> TokenPairWithContent =  t_ugc_comment_level0_role129_Object.mapToPair(new PairFunction<UgcCommentLog, String, UgcCommentLog>() {
+            @Override
+            public Tuple2<String, UgcCommentLog> call(UgcCommentLog ugcCommentLog) throws Exception {
+                return new Tuple2<String, UgcCommentLog>(ugcCommentLog.getToken(),ugcCommentLog);
+            }
+        });
 
         JavaPairDStream<Integer, Integer> CommenterIdPair =  t_ugc_comment_level0_role129_Object.mapToPair(new PairFunction<UgcCommentLog, Integer, Integer>() {
             @Override
@@ -332,10 +338,95 @@ public class UgcCommentAntiSpam {
         ContentPairigBigThanThreshold10hper1h.print(5000);
         IpPairigBigThanThreshold10hper1h.print(5000);
         TokenPairigBigThanThreshold10hper1h.print(5000);*/
-        CommenterIdPairBigThanThreshold10hper1h.leftOuterJoin(CommenterIdPairWithContent).print(5000);
-        ContentPairigBigThanThreshold10hper1h.leftOuterJoin(ContentPairWithContent).print(5000);
-        IpPairigBigThanThreshold10hper1h.leftOuterJoin(IpPairWithContent).print(5000);
-        TokenPairigBigThanThreshold10hper1h.print(5000);
+        CommenterIdPairBigThanThreshold10hper1h.leftOuterJoin(CommenterIdPairWithContent).foreachRDD(new Function2<JavaPairRDD<Integer, Tuple2<Integer, Optional<UgcCommentLog>>>, Time, Void>() {
+            @Override
+            public Void call(JavaPairRDD<Integer, Tuple2<Integer, Optional<UgcCommentLog>>> integerTuple2JavaPairRDD, Time time) throws Exception {
+                integerTuple2JavaPairRDD.values().foreach(new VoidFunction<Tuple2<Integer, Optional<UgcCommentLog>>>() {
+                    @Override
+                    public void call(Tuple2<Integer, Optional<UgcCommentLog>> integerOptionalTuple2) throws Exception {
+                        Optional<UgcCommentLog> optional =  integerOptionalTuple2._2();
+                        UgcCommentLog ugcCommentLog = optional.orNull();
+                        if(ugcCommentLog!=null)
+                        {
+                            synchronized(_db){
+                                _db.execute(String.format("insert into t_result_ugc_antispam_online (commenterId,ip,device_token,user_name,commentId,content,stat_time,user_level) values ('%s','%s','%s','%s','%s','%s','%s','%s');"
+                                        ,ugcCommentLog.getCommenterId(), ugcCommentLog.getIp(), ugcCommentLog.getToken(), ugcCommentLog.getNickName(), ugcCommentLog.getCommentId(),
+                                        ugcCommentLog.getContent(), CalendarUtil.getDetailDateFormat(ugcCommentLog.getTimestamp()),ugcCommentLog.getUserLevel()));
+                            }
+                        }
+                    }
+                });
+                return null;
+            }
+        });
+        
+        ContentPairigBigThanThreshold10hper1h.leftOuterJoin(ContentPairWithContent).foreachRDD(new Function2<JavaPairRDD<String, Tuple2<Integer, Optional<UgcCommentLog>>>, Time, Void>() {
+            @Override
+            public Void call(JavaPairRDD<String, Tuple2<Integer, Optional<UgcCommentLog>>> stringTuple2JavaPairRDD, Time time) throws Exception {
+                stringTuple2JavaPairRDD.values().foreach(new VoidFunction<Tuple2<Integer, Optional<UgcCommentLog>>>() {
+                    @Override
+                    public void call(Tuple2<Integer, Optional<UgcCommentLog>> integerOptionalTuple2) throws Exception {
+                        Optional<UgcCommentLog> optional =  integerOptionalTuple2._2();
+                        UgcCommentLog ugcCommentLog = optional.orNull();
+                        if(ugcCommentLog!=null)
+                        {
+                            synchronized(_db){
+                                _db.execute(String.format("insert into t_result_ugc_antispam_online (commenterId,ip,device_token,user_name,commentId,content,stat_time,user_level) values ('%s','%s','%s','%s','%s','%s','%s','%s');"
+                                        ,ugcCommentLog.getCommenterId(), ugcCommentLog.getIp(), ugcCommentLog.getToken(), ugcCommentLog.getNickName(), ugcCommentLog.getCommentId(),
+                                        ugcCommentLog.getContent(), CalendarUtil.getDetailDateFormat(ugcCommentLog.getTimestamp()),ugcCommentLog.getUserLevel()));
+                            }
+                        }
+
+                    }
+                });
+                return null;
+            }
+        });
+
+        IpPairigBigThanThreshold10hper1h.leftOuterJoin(IpPairWithContent).foreachRDD(new Function2<JavaPairRDD<String, Tuple2<Integer, Optional<UgcCommentLog>>>, Time, Void>() {
+            @Override
+            public Void call(JavaPairRDD<String, Tuple2<Integer, Optional<UgcCommentLog>>> stringTuple2JavaPairRDD, Time time) throws Exception {
+                stringTuple2JavaPairRDD.values().foreach(new VoidFunction<Tuple2<Integer, Optional<UgcCommentLog>>>() {
+                    @Override
+                    public void call(Tuple2<Integer, Optional<UgcCommentLog>> integerOptionalTuple2) throws Exception {
+                        Optional<UgcCommentLog> optional =  integerOptionalTuple2._2();
+                        UgcCommentLog ugcCommentLog = optional.orNull();
+                        if(ugcCommentLog!=null)
+                        {
+                            synchronized(_db){
+                                _db.execute(String.format("insert into t_result_ugc_antispam_online (commenterId,ip,device_token,user_name,commentId,content,stat_time,user_level) values ('%s','%s','%s','%s','%s','%s','%s','%s');"
+                                        ,ugcCommentLog.getCommenterId(), ugcCommentLog.getIp(), ugcCommentLog.getToken(), ugcCommentLog.getNickName(), ugcCommentLog.getCommentId(),
+                                        ugcCommentLog.getContent(), CalendarUtil.getDetailDateFormat(ugcCommentLog.getTimestamp()),ugcCommentLog.getUserLevel()));
+                            }
+                        }
+
+                    }
+                });
+                return null;
+            }
+        });
+
+        TokenPairigBigThanThreshold10hper1h.leftOuterJoin(TokenPairWithContent).foreachRDD(new Function2<JavaPairRDD<String, Tuple2<Integer, Optional<UgcCommentLog>>>, Time, Void>() {
+            @Override
+            public Void call(JavaPairRDD<String, Tuple2<Integer, Optional<UgcCommentLog>>> stringTuple2JavaPairRDD, Time time) throws Exception {
+                stringTuple2JavaPairRDD.values().foreach(new VoidFunction<Tuple2<Integer, Optional<UgcCommentLog>>>() {
+                    @Override
+                    public void call(Tuple2<Integer, Optional<UgcCommentLog>> integerOptionalTuple2) throws Exception {
+                        Optional<UgcCommentLog> optional =  integerOptionalTuple2._2();
+                        UgcCommentLog ugcCommentLog = optional.orNull();
+                        if(ugcCommentLog!=null)
+                        {
+                            synchronized(_db){
+                                _db.execute(String.format("insert into t_result_ugc_antispam_online (commenterId,ip,device_token,user_name,commentId,content,stat_time,user_level) values ('%s','%s','%s','%s','%s','%s','%s','%s');"
+                                        ,ugcCommentLog.getCommenterId(), ugcCommentLog.getIp(), ugcCommentLog.getToken(), ugcCommentLog.getNickName(), ugcCommentLog.getCommentId(),
+                                        ugcCommentLog.getContent(), CalendarUtil.getDetailDateFormat(ugcCommentLog.getTimestamp()),ugcCommentLog.getUserLevel()));
+                            }
+                        }
+                    }
+                });
+                return null;
+            }
+        });
         jssc.start();
         jssc.awaitTermination();
     }
