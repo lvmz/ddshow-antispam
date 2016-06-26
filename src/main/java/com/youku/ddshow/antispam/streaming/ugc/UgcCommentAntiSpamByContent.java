@@ -165,6 +165,11 @@ public class UgcCommentAntiSpamByContent {
             public Boolean call(UgcCommentLog ugcCommentLog) throws Exception {
                 return ContentKeyWordFilter.isSpamNickName(ugcCommentLog.getContent());
             }
+        }).map(new Function<UgcCommentLog, String>() {
+            @Override
+            public String call(UgcCommentLog ugcCommentLog) throws Exception {
+                return ugcCommentLog.getContent();
+            }
         }).print(5000);
 
         t_ugc_comment_level0_role129_Object.foreach(new Function2<JavaRDD<UgcCommentLog>, Time, Void>() {
