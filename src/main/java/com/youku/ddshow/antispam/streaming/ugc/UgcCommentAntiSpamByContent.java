@@ -194,7 +194,7 @@ public class UgcCommentAntiSpamByContent {
                         if(db175!=null)
                         {
                             synchronized(db175){
-                                db175.execute(String.format("insert into t_result_ugc_antispam (commenterId,ip,device_token,user_name,commentId,content,stat_time,user_level) values ('%s','%s','%s','%s','%s','%s','%s','%s');"
+                                db175.execute(String.format("insert into t_result_ugc_comment_antispam (commenterId,ip,device_token,user_name,commentId,content,stat_time,user_level) values ('%s','%s','%s','%s','%s','%s','%s','%s');"
                                         ,ugcCommentLog.getCommenterId(), ugcCommentLog.getIp(), ugcCommentLog.getToken(), ugcCommentLog.getNickName()+"_keyword", ugcCommentLog.getCommentId(),
                                         ugcCommentLog.getContent(), CalendarUtil.getDetailDateFormat(ugcCommentLog.getTimestamp()),ugcCommentLog.getUserLevel()));
                             }
