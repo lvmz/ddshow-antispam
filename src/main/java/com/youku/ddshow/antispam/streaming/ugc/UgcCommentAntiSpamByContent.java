@@ -160,6 +160,13 @@ public class UgcCommentAntiSpamByContent {
                 return ugcCommentLog;
             }
         });
+        t_ugc_comment_level0_role129_Object.filter(new Function<UgcCommentLog, Boolean>() {
+            @Override
+            public Boolean call(UgcCommentLog ugcCommentLog) throws Exception {
+                return ContentKeyWordFilter.isSpamNickName(ugcCommentLog.getContent());
+            }
+        }).print(5000);
+
         t_ugc_comment_level0_role129_Object.foreach(new Function2<JavaRDD<UgcCommentLog>, Time, Void>() {
             @Override
             public Void call(JavaRDD<UgcCommentLog> ugcCommentLogJavaRDD, Time time) throws Exception {
@@ -168,6 +175,7 @@ public class UgcCommentAntiSpamByContent {
                     public void call(UgcCommentLog ugcCommentLog) throws Exception {
                         if(ContentKeyWordFilter.isSpamNickName(ugcCommentLog.getContent()))
                         {
+
                             if(_db!=null)
                             {
                                 synchronized(_db){
