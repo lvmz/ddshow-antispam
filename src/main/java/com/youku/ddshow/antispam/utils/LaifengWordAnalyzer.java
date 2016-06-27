@@ -74,13 +74,13 @@ public class LaifengWordAnalyzer {
          return stringBuilder.toString();
      }
     public static String StringFilter(String str) throws PatternSyntaxException {
-        String regEx="[`~!@#$%^&*()+=|{}':;',\\[\\].<>/?~！@#￥%……&*＊♬✘（）———+|{}【】\\-‘；：”“’。，、？0-9a-zA-Z]";
+        String regEx="[`~～!@#$%^&*()+=|{}':;',\\[\\].<>/?~！@#￥%……&*＊♬✘（）———+|{}【】\\-‘；：”“’。，、？0-9a-zA-Z]";
         Pattern p = Pattern.compile(regEx);
         Matcher m = p.matcher(str);
         return m.replaceAll("").trim();
     }
     public  static void main(String[] args) throws IOException {
-        System.out.println(LaifengWordAnalyzer.wordAnalyzer("本人[亲亲][亲亲][亲亲]看名字[爱你][爱你][爱你]加宝宝[鬼脸][鬼脸][鬼脸]寂寞想要自拍视频[微笑][微笑][微笑]本人[爱你][爱你]看名字[鬼脸][鬼脸]加宝宝自拍视频[微笑][微笑][微笑]寂寞想要[亲亲][亲亲]"));
+        System.out.println(LaifengWordAnalyzer.StringFilter("[爱你][爱你][爱你]看～主～播～私～密～视～频～加～我～薇～信cxy9087[亲亲][亲亲][亲亲]超爽～超刺激[亲亲][亲亲][亲亲]"));
 
        // System.out.println(StringFilter("有要玩lou聊加我喔，171360q4982"));
        // Map<String,String>  map = new HashMap<String,String>();
