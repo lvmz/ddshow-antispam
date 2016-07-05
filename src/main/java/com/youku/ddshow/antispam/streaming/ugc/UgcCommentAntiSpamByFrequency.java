@@ -157,6 +157,7 @@ public class UgcCommentAntiSpamByFrequency {
                        ugcCommentLog.setCommenterId(dataJson.containsKey("commenter")?dataJson.getInteger("commenter"):0);
                        ugcCommentLog.setCommentId(dataJson.containsKey("id")?dataJson.getInteger("id"):0);
                        ugcCommentLog.setEntityId(dataJson.containsKey("entityId")?dataJson.getInteger("entityId"):0);
+                       ugcCommentLog.setEntityType(dataJson.containsKey("entityType")?dataJson.getInteger("entityType"):0);
                        ugcCommentLog.setContent(dataJson.containsKey("content")?dataJson.getString("content"):"");
                        ugcCommentLog.setNickName(dataJson.containsKey("nickName")?dataJson.getString("nickName"):"");
                        ugcCommentLog.setTimestamp(dataJson.containsKey("timestamp")?dataJson.getLongValue("timestamp"):0L);
@@ -357,8 +358,8 @@ public class UgcCommentAntiSpamByFrequency {
                                 if(db175!=null)
                                 {
                                     synchronized(db175){
-                                        db175.execute(String.format("insert into t_result_ugc_comment_antispam (commenterId,ip,device_token,user_name,commentId,content,stat_time,user_level) values ('%s','%s','%s','%s','%s','%s','%s','%s');"
-                                                ,ugcCommentLog.getCommenterId(), ugcCommentLog.getIp(), ugcCommentLog.getToken(), ugcCommentLog.getNickName()+"_f_id", ugcCommentLog.getCommentId(),
+                                        db175.execute(String.format("insert into t_result_ugc_comment_antispam (entity_type,entity_id,commenterId,ip,device_token,user_name,commentId,content,stat_time,user_level) values ('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s');"
+                                                ,ugcCommentLog.getEntityType(),ugcCommentLog.getEntityId(),ugcCommentLog.getCommenterId(), ugcCommentLog.getIp(), ugcCommentLog.getToken(), ugcCommentLog.getNickName()+"_f_id", ugcCommentLog.getCommentId(),
                                                 ugcCommentLog.getContent(), CalendarUtil.getDetailDateFormat(ugcCommentLog.getTimestamp()),ugcCommentLog.getUserLevel()));
                                     }
                                 }else
@@ -391,8 +392,8 @@ public class UgcCommentAntiSpamByFrequency {
                                 if(db175!=null)
                                 {
                                     synchronized(db175){
-                                        db175.execute(String.format("insert into t_result_ugc_comment_antispam (commenterId,ip,device_token,user_name,commentId,content,stat_time,user_level) values ('%s','%s','%s','%s','%s','%s','%s','%s');"
-                                                ,ugcCommentLog.getCommenterId(), ugcCommentLog.getIp(), ugcCommentLog.getToken(), ugcCommentLog.getNickName()+"__f_content", ugcCommentLog.getCommentId(),
+                                        db175.execute(String.format("insert into t_result_ugc_comment_antispam (entity_type,entity_id,commenterId,ip,device_token,user_name,commentId,content,stat_time,user_level) values ('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s');"
+                                                ,ugcCommentLog.getEntityType(),ugcCommentLog.getEntityId(),ugcCommentLog.getCommenterId(), ugcCommentLog.getIp(), ugcCommentLog.getToken(), ugcCommentLog.getNickName()+"_f_Content", ugcCommentLog.getCommentId(),
                                                 ugcCommentLog.getContent(), CalendarUtil.getDetailDateFormat(ugcCommentLog.getTimestamp()),ugcCommentLog.getUserLevel()));
                                     }
                                 }else
@@ -424,9 +425,10 @@ public class UgcCommentAntiSpamByFrequency {
                                 if(db175!=null)
                                 {
                                     synchronized(db175){
-                                        db175.execute(String.format("insert into t_result_ugc_comment_antispam (commenterId,ip,device_token,user_name,commentId,content,stat_time,user_level) values ('%s','%s','%s','%s','%s','%s','%s','%s');"
-                                                ,ugcCommentLog.getCommenterId(), ugcCommentLog.getIp(), ugcCommentLog.getToken(), ugcCommentLog.getNickName()+"_f_ip", ugcCommentLog.getCommentId(),
+                                        db175.execute(String.format("insert into t_result_ugc_comment_antispam (entity_type,entity_id,commenterId,ip,device_token,user_name,commentId,content,stat_time,user_level) values ('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s');"
+                                                ,ugcCommentLog.getEntityType(),ugcCommentLog.getEntityId(),ugcCommentLog.getCommenterId(), ugcCommentLog.getIp(), ugcCommentLog.getToken(), ugcCommentLog.getNickName()+"_f_Ip", ugcCommentLog.getCommentId(),
                                                 ugcCommentLog.getContent(), CalendarUtil.getDetailDateFormat(ugcCommentLog.getTimestamp()),ugcCommentLog.getUserLevel()));
+
                                     }
                                 }else
                                 {
@@ -457,9 +459,10 @@ public class UgcCommentAntiSpamByFrequency {
                                 if(db175!=null)
                                 {
                                     synchronized(db175){
-                                        db175.execute(String.format("insert into t_result_ugc_comment_antispam (commenterId,ip,device_token,user_name,commentId,content,stat_time,user_level) values ('%s','%s','%s','%s','%s','%s','%s','%s');"
-                                                ,ugcCommentLog.getCommenterId(), ugcCommentLog.getIp(), ugcCommentLog.getToken(), ugcCommentLog.getNickName()+"_f_token", ugcCommentLog.getCommentId(),
+                                        db175.execute(String.format("insert into t_result_ugc_comment_antispam (entity_type,entity_id,commenterId,ip,device_token,user_name,commentId,content,stat_time,user_level) values ('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s');"
+                                                ,ugcCommentLog.getEntityType(),ugcCommentLog.getEntityId(),ugcCommentLog.getCommenterId(), ugcCommentLog.getIp(), ugcCommentLog.getToken(), ugcCommentLog.getNickName()+"_f_token", ugcCommentLog.getCommentId(),
                                                 ugcCommentLog.getContent(), CalendarUtil.getDetailDateFormat(ugcCommentLog.getTimestamp()),ugcCommentLog.getUserLevel()));
+
                                     }
                                 }else
                                 {

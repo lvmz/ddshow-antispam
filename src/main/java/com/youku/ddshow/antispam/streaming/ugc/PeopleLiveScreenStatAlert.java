@@ -5,7 +5,12 @@ import com.alibaba.fastjson.JSONObject;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.youku.ddshow.antispam.model.PropertiesType;
+import com.youku.ddshow.antispam.model.UgcChat;
+import com.youku.ddshow.antispam.model.UgcCommentLog;
+import com.youku.ddshow.antispam.model.UgcUserPraiseRecordLog;
 import com.youku.ddshow.antispam.utils.HbaseUtils;
+import com.youku.ddshow.antispam.utils.LogUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.spark.Accumulator;
@@ -134,70 +139,43 @@ public class PeopleLiveScreenStatAlert {
        /* *
          * 过滤字段个数大于22的，为下面的filter做准备*/
 
-        JavaDStream<ArrayList<String>> bigThen22 =     splited.filter(new Function<ArrayList<String>, Boolean>() {
+        JavaDStream<ArrayList<String>> bigThen6 =     splited.filter(new Function<ArrayList<String>, Boolean>() {
             @Override
             public Boolean call(ArrayList<String> strings) throws Exception {
                 return strings.size()>6;
             }
         });
 
-        JavaDStream<ArrayList<String>> nothing =     splited.filter(new Function<ArrayList<String>, Boolean>() {
-            @Override
-            public Boolean call(ArrayList<String> strings) throws Exception {
-                return strings.size()>1000;
-            }
-        });
-        JavaDStream<java.util.List<java.util.List<java.lang.String>>> sdf =   nothing.map(new Function<ArrayList<String>,  List<List<java.lang.String>> >() {
-            @Override
-            public  List<List<java.lang.String>>  call(ArrayList<String> strings) throws Exception {
 
-                SparkContext ctx = jssc.sc().sc();
-                RDD<String> textFile = ctx.textFile(roomiduidPath, 1);
-                JavaRDD<java.util.List<java.lang.String>> t_room =  textFile.toJavaRDD().map(new Function<String, List<String>>() {
-                    @Override
-                    public List<String> call(String s) throws Exception {
-                        System.out.println(s);
-                        return Arrays.asList(SPACE.split(s));
-                    }
-                });
-                return t_room.collect();
-            }
-        });
-        sdf.print();
-/*//------------------------------点赞 t_user_praise_record-----------------------
-        JavaDStream<ArrayList<String>> t_user_praise_record =     bigThen22.filter(new Function<ArrayList<String>, Boolean>() {
+//------------------------------点赞 t_user_praise_record-----------------------
+        JavaDStream<ArrayList<String>> t_user_praise_record =     bigThen6.filter(new Function<ArrayList<String>, Boolean>() {
             @Override
             public Boolean call(ArrayList<String> strings) throws Exception {
                 return strings.get(6).equals("t_user_praise_record");
             }
         });
 
-        JavaPairDStream<String, Integer> t_user_praise_record_pair =    t_user_praise_record.mapToPair(new PairFunction<ArrayList<String>, String, Integer>() {
+        JavaPairDStream<Integer, UgcUserPraiseRecordLog> t_user_praise_record_pair =    t_user_praise_record.mapToPair(new PairFunction<ArrayList<String>, Integer, UgcUserPraiseRecordLog>() {
             @Override
-            public Tuple2<String, Integer> call(ArrayList<String> strings) throws Exception {
+            public Tuple2<Integer, UgcUserPraiseRecordLog> call(ArrayList<String> strings) throws Exception {
 
-                JSONObject dataInfo =   (JSONObject) JSON.parse(strings.get(7));
-                String anchorId =  dataInfo.getJSONObject("dataInfo").get("anchorId").toString();// 播客id
-                String count =  dataInfo.getJSONObject("dataInfo").get("count").toString();// 播客id
-                Integer countInt = 0;
-                try
+                UgcUserPraiseRecordLog ugcUserPraiseRecordLog = new UgcUserPraiseRecordLog();
+                ugcUserPraiseRecordLog.setIp(LogUtils.getIpBySeuenceId(strings.get(5)));
+                ugcUserPraiseRecordLog.setToken(LogUtils.getTokenBySeuenceId(strings.get(5)));
+                if(StringUtils.isNotBlank(strings.get(7)))
                 {
-                    countInt =  Integer.parseInt(count);
-                }catch (Exception e)
-                {
-                    e.printStackTrace();
+                    JSONObject dataJson = LogUtils.getUgcDataJson(strings.get(7));
+                    ugcUserPraiseRecordLog.setRoomId(dataJson.containsKey("roomId")?dataJson.getInteger("roomId"):0);
+                    ugcUserPraiseRecordLog.setAnchorId(dataJson.containsKey("anchorId")?dataJson.getInteger("anchorId"):0);
+                    ugcUserPraiseRecordLog.setCount(dataJson.containsKey("count")?dataJson.getInteger("count"):0);
+                    ugcUserPraiseRecordLog.setCreateTime(dataJson.containsKey("createTime")?dataJson.getString("createTime"):"");
                 }
-                return new Tuple2<String, Integer>(anchorId,countInt);
+                return new Tuple2<Integer, UgcUserPraiseRecordLog>(ugcUserPraiseRecordLog.getRoomId(),ugcUserPraiseRecordLog);
             }
         });
 
 
-        JavaPairDStream<String, Integer> t_user_praise_record_pair_reduce =    t_user_praise_record_pair.reduceByKey(new Function2<Integer, Integer, Integer>() {
-            @Override
-            public Integer call(Integer integer, Integer integer2) throws Exception {
-                return integer+integer2;
-            }
-        });*/
+
 
        /* JavaPairDStream<String, Integer> t_user_praise_record_pair_reduce_roomid =    t_user_praise_record_pair_reduce.mapToPair(new PairFunction<Tuple2<String,Integer>, String, Integer>() {
             @Override
@@ -220,8 +198,8 @@ public class PeopleLiveScreenStatAlert {
         });*/
 
 
-     /*   //------------------------------评论 t_chat----------------------
-        JavaDStream<ArrayList<String>> t_chat =     bigThen22.filter(new Function<ArrayList<String>, Boolean>() {
+        //------------------------------评论 t_chat----------------------
+        JavaDStream<ArrayList<String>> t_chat =     bigThen6.filter(new Function<ArrayList<String>, Boolean>() {
             @Override
             public Boolean call(ArrayList<String> strings) throws Exception {
                 return strings.get(6).equals("t_chat");
@@ -231,8 +209,24 @@ public class PeopleLiveScreenStatAlert {
         JavaPairDStream<String, Integer> t_chat_pair =    t_chat.mapToPair(new PairFunction<ArrayList<String>, String, Integer>() {
             @Override
             public Tuple2<String, Integer> call(ArrayList<String> strings) throws Exception {
+                UgcChat ugcChat = new UgcChat();
+                ugcChat.setIp(LogUtils.getIpBySeuenceId(strings.get(5)));
+                ugcChat.setToken(LogUtils.getTokenBySeuenceId(strings.get(5)));
+                if(StringUtils.isNotBlank(strings.get(7)))
+                {
+                    JSONObject dataJson = LogUtils.getUgcDataJson(strings.get(7));
+                    ugcChat.setAnchorLevel(dataJson.containsKey("anchorLevel")?dataJson.getInteger("anchorLevel"):0);
+                    ugcChat.setContent(dataJson.containsKey("content")?dataJson.getString("content"):"");
+                    ugcChat.setCreateDate(dataJson.containsKey("createTime")?dataJson.getString("createTime"):"");
+
+
+                  /*  ugcUserPraiseRecordLog.setAnchorId(dataJson.containsKey("anchorId")?dataJson.getInteger("anchorId"):0);
+                    ugcUserPraiseRecordLog.setCount(dataJson.containsKey("count")?dataJson.getInteger("count"):0);
+                    ugcUserPraiseRecordLog.setCreateTime(dataJson.containsKey("createTime")?dataJson.getString("createTime"):"");*/
+                }
                 JSONObject dataInfo =   (JSONObject) JSON.parse(strings.get(7));
                 String roomId =  dataInfo.getJSONObject("dataInfo").get("roomId").toString();// 播客id 即被留言用户
+
                 return new Tuple2<String, Integer>(roomId,1);
             }
         });
@@ -242,7 +236,7 @@ public class PeopleLiveScreenStatAlert {
             public Integer call(Integer integer, Integer integer2) throws Exception {
                 return integer+integer2;
             }
-        });*/
+        });
 
 
        /* JavaPairDStream<String, Tuple2<Optional<Integer>, Optional<Integer>>>  praiseJoinChat =    t_user_praise_record_pair_reduce_roomid.fullOuterJoin(t_chat_pair_reduce);

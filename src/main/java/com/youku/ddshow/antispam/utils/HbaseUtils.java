@@ -453,7 +453,7 @@ public class HbaseUtils {
 
 
 	public static void main(String[] args) throws Exception {
-		HbaseUtils util = new HbaseUtils(PropertiesType.DDSHOW_HASE_TEST, "lf_t_view_hbase_room_stat");
+/*		HbaseUtils util = new HbaseUtils(PropertiesType.DDSHOW_HASE_TEST, "lf_t_view_hbase_room_stat");
 		Long a=  System.currentTimeMillis();
 		Tuple3<String,String,Map<String,String>> tuple3 =  util.getOneRecord("02_roomid","popularNumK");
 		Map map =  tuple3._3();
@@ -462,16 +462,16 @@ public class HbaseUtils {
 		Map roomuid =   (Map<String,String>)JSON.parse(jsonstr);
 		  System.out.println(roomuid.get("912077093"));
 		Long b = System.currentTimeMillis();
-		System.out.println(b-a);
+		System.out.println(b-a);*/
 
-	/*	HbaseUtils util = new HbaseUtils(PropertiesType.DDSHOW_HASE_TEST, "lf_t_view_hbase_room_stat");
+		HbaseUtils util = new HbaseUtils(PropertiesType.DDSHOW_HASE_TEST, "lf_t_view_hbase_room_stat");
 		Long a=  System.currentTimeMillis();
-		Integer rank =  util.getRank("09_69119_2016-06-16","base_info");
+		Integer rank =  util.getRank("06_2131776_2016-07-03","base_info");
 
 		//Integer rank2 = (rank==null?rank:-1);
 		System.out.println(rank);
 		Long b = System.currentTimeMillis();
-		System.out.println(b-a);*/
+		System.out.println(b-a);
 
 
 		/*HbaseUtils util = new HbaseUtils(PropertiesType.DDSHOW_HASE_TEST, "lf_t_view_hbase_room_stat");
