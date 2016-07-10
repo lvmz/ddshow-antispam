@@ -14,7 +14,9 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by caixiaojun on 2016/7/6.
@@ -101,6 +103,30 @@ public class QianKunDaiUtils {
         }
     }
 
+    /**
+     *
+     * @return
+     */
+    public static Set getKeyWordFromQkd()
+    {
+        String url="http://10.100.23.57:80/hdp/kvstore/kv/";
+        QkdParameter parameter=new QkdParameter();
+        parameter.setAk("CuVEz/TxDu");
+        parameter.setK("caixiaojun");
+        parameter.setUri("qkd://LIHANGTEST/6j");
+        String value =   kvGet(url,parameter).getV();
+        if(value==null)
+        {
+            return null;
+        }else
+        {
+
+        }
+
+
+        Set set = new HashSet<>();
+        return  set;
+    }
     /**
      * kv/ttl
      * @param url
