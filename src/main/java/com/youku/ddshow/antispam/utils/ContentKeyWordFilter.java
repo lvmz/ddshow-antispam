@@ -61,7 +61,7 @@ public class ContentKeyWordFilter {
     public static  boolean isSpamNickName(String nickName)  throws IOException
     {
         String  filtedNickName = nickNameFilter(LaifengWordAnalyzer.relaceFilter(LaifengWordAnalyzer.StringFilter(nickName)));
-        //System.out.println("LaifengWordAnalyzer.StringFilter "+LaifengWordAnalyzer.StringFilter(nickName));
+       // System.out.println("LaifengWordAnalyzer.StringFilter "+LaifengWordAnalyzer.StringFilter(nickName));
         String  pinyinNickName = "";
         try{
             pinyinNickName = ChineseToEnglish.getPingYin(LaifengWordAnalyzer.relaceFilter(nickName));
@@ -87,7 +87,7 @@ public class ContentKeyWordFilter {
     {
         try {
                 String encoding="UTF-8";
-                 File file=new File("D:\\文本分类\\nick_name.txt");
+                 File file=new File("D:\\文本分类\\antispam_keyword.txt");
                 if(file.isFile() && file.exists()){ //判断文件是否存在
                  InputStreamReader read = new InputStreamReader(
                  new FileInputStream(file),encoding);//考虑到编码格式
