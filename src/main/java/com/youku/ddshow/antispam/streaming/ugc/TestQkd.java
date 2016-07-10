@@ -72,7 +72,7 @@ public class TestQkd {
                 return Lists.newArrayList(SPACE.split(s));
             }
         });
-        splited.count();
+        splited.count().print();
         jssc.start();
         jssc.awaitTermination();
     }
