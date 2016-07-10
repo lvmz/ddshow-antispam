@@ -68,7 +68,7 @@ public class TestQkd {
                 parameter.setAk("CuVEz/TxDu");
                 parameter.setK("caixiaojun");
                 parameter.setUri("qkd://LIHANGTEST/6j");
-                System.out.println(""+  QianKunDaiUtils.kvGet(url,parameter).getV());
+                System.out.println("QianKunDaiUtils------------>"+  QianKunDaiUtils.kvGet(url,parameter).getV());
                 return Lists.newArrayList(SPACE.split(s));
             }
         });
