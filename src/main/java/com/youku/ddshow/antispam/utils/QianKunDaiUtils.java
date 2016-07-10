@@ -161,12 +161,7 @@ public class QianKunDaiUtils {
         }
     }*/
 
-    /**
-     * kv/mget
-     * @param url
-     * @param parameter
-     * @return
-     */
+
    /* public static QkdMgetResult kvMget(String url, QkdMgetParameter parameter){
         QkdMgetResult qkdMesult=new QkdMgetResult();
         try {
@@ -244,9 +239,9 @@ public class QianKunDaiUtils {
         parameterDetail1.setUri("qkd://LIHANGTEST/6j");
         parameterDetail1.setV("10");
 
-        kvSet(url,parameterDetail);
+       // kvSet(url,parameterDetail);
         System.out.println(""+  kvGet(url,parameter).getV());
-        kvDel(url,parameter);
+       // kvDel(url,parameter);
         System.out.println(""+ kvGet(url,parameter).getV());
  /*       kvSet(url,parameterDetail);
         System.out.println(""+kvTtl(url,parameter).getData());*/

@@ -89,8 +89,7 @@ public class UgcCommentAntiSpamByContent {
 
 
 
-          /* *
-         * 过滤字段个数大于22的，为下面的filter做准备*/
+
         JavaDStream<String> lines = messages.map(new Function<Tuple2<String, String>, String>() {
             @Override
             public String call(Tuple2<String, String> tuple2) throws IOException {
