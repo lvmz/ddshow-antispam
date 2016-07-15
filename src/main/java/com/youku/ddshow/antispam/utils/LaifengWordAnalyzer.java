@@ -74,13 +74,13 @@ public class LaifengWordAnalyzer {
          return stringBuilder.toString();
      }
     public static String StringFilter(String str) throws PatternSyntaxException {
-        String regEx="[`~～_!@#$%^&*()+=|{}':;',\\[\\].<>/?~！@#￥%……&*＊♬✘（）———+|{}【】\\-‘；：”“’。，、？0-9a-zA-Z]";
+        String regEx="[`~～_!@#$%^&*()+=|{}':;',\\[\\].<>/?~！@#￥%……&*＊♬✘（）———+|{}【】\\-‘；：”“’.。•，、？0-9a-zA-Z]";
         Pattern p = Pattern.compile(regEx);
         Matcher m = p.matcher(str);
         return m.replaceAll("").trim();
     }
     public  static void main(String[] args) throws IOException {
-        System.out.println(LaifengWordAnalyzer.StringFilter("[亲亲][亲亲][亲亲]看-主-播_私_拍_加-薇-信 cv18988[害羞][害羞][微笑][微笑][鬼脸][鬼脸]"));
+        System.out.println(LaifengWordAnalyzer.StringFilter("需要.妹妹.视频.服务.脱.漏.湿密+微信：zjj..8973(去.)"));
 
        // System.out.println(StringFilter("有要玩lou聊加我喔，171360q4982"));
        // Map<String,String>  map = new HashMap<String,String>();

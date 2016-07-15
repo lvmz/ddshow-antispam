@@ -217,7 +217,8 @@ public class PeopleLiveScreenStatAlert {
                     JSONObject dataJson = LogUtils.getUgcDataJson(strings.get(7));
                     ugcChat.setAnchorLevel(dataJson.containsKey("anchorLevel")?dataJson.getInteger("anchorLevel"):0);
                     ugcChat.setContent(dataJson.containsKey("content")?dataJson.getString("content"):"");
-                    ugcChat.setCreateDate(dataJson.containsKey("createTime")?dataJson.getString("createTime"):"");
+                    JSONObject createDateJson =   LogUtils.getUgcDataJson(dataJson.containsKey("createDate")?dataJson.getString("createDate"):"");
+                    ugcChat.setCreateDate(createDateJson.containsKey("createTime")?createDateJson.getString("createTime"):"");
 
 
                   /*  ugcUserPraiseRecordLog.setAnchorId(dataJson.containsKey("anchorId")?dataJson.getInteger("anchorId"):0);

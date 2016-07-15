@@ -101,12 +101,9 @@ public class QianKunDaiUtils {
         }
     }
 
-    /**
-     * kv/ttl
-     * @param url
-     * @param parameter
-     * @return
-     */
+
+
+
  /*   public static kvTtl(String url,QkdParameter parameter){
         QkdResult ttlResult=new QkdResult();
         try {
@@ -121,12 +118,7 @@ public class QianKunDaiUtils {
         }
     }
 */
-    /**
-     * kv/incr
-     * @param url
-     * @param parameter
-     * @return
-     */
+
  /*   public static QkdResult kvIncr(String url, QkdParameter parameter){
         QkdResult qkdResult=new QkdResult();
         try {
@@ -141,12 +133,7 @@ public class QianKunDaiUtils {
         }
     }*/
 
-    /**
-     * kv/incrBy
-     * @param url
-     * @param parameter
-     * @return
-     */
+
  /*   public static QkdResult kvIncrBy(String url, QkdParameterDetail parameter){
         QkdResult qkdResult=new QkdResult();
         try {
@@ -162,11 +149,11 @@ public class QianKunDaiUtils {
     }*/
 
 
-   /* public static QkdMgetResult kvMget(String url, QkdMgetParameter parameter){
+    public static QkdMgetResult kvMget(String url, QkdMgetParameter parameter){
         QkdMgetResult qkdMesult=new QkdMgetResult();
         try {
-            String result = post(url+KV_MGET, JSONUtil.oject2Json(parameter));
-            qkdMesult=JSONUtil.json2Object(result, QkdMgetResult.class);
+            String result = post(url+KV_MGET, JSON.toJSONString(parameter));
+            qkdMesult=JSON.parseObject(result, QkdMgetResult.class);
         } catch (Exception e) {
             e.printStackTrace();
             logger.error(e.getMessage(),e);
@@ -174,7 +161,7 @@ public class QianKunDaiUtils {
         finally {
             return  qkdMesult;
         }
-    }*/
+    }
 
 
    /* public static QkdMsetResult kvMset(String url, QKdMsetParameter parameter){
@@ -215,44 +202,44 @@ public class QianKunDaiUtils {
 
     public static void main(String[] args) {
         String url="http://10.100.23.57:80/hdp/kvstore/kv/";
-        int length=5000;
+        int length=1000;
         QkdParameter parameter=new QkdParameter();
         parameter.setAk("CuVEz/TxDu");
-        parameter.setK("caixiaojun");
-        parameter.setUri("qkd://LIHANGTEST/6j");
+        parameter.setK("spamWordKey");
+        parameter.setUri("qkd://BJTEST/6j");
 
         QkdParameterDetail parameterDetail=new QkdParameterDetail();
         parameterDetail.setAk("CuVEz/TxDu");
-        parameterDetail.setK("caixiaojun");
-        parameterDetail.setUri("qkd://LIHANGTEST/6j");
-        parameterDetail.setV("吊炸天");
+        parameterDetail.setK("spamWordKey");
+        parameterDetail.setUri("qkd://BJTEST/6j");
+        parameterDetail.setV("18010069603"+","+"842307"+","+"283248744");
 
         QkdParameter parameter1=new QkdParameter();
         parameter1.setAk("CuVEz/TxDu");
-        parameter1.setK("number");
-        parameter1.setUri("qkd://LIHANGTEST/6j");
+        parameter1.setK("spamWordKey");
+        parameter1.setUri("qkd://BJTEST/6j");
 
 
         QkdParameterDetail parameterDetail1=new QkdParameterDetail();
         parameterDetail1.setAk("CuVEz/TxDu");
-        parameterDetail1.setK("number");
-        parameterDetail1.setUri("qkd://LIHANGTEST/6j");
+        parameterDetail1.setK("spamWordKey");
+        parameterDetail1.setUri("qkd://BJTEST/6j");
         parameterDetail1.setV("10");
 
-       // kvSet(url,parameterDetail);
+       //kvSet(url,parameterDetail);
         System.out.println(""+  kvGet(url,parameter).getV());
        // kvDel(url,parameter);
         System.out.println(""+ kvGet(url,parameter).getV());
  /*       kvSet(url,parameterDetail);
         System.out.println(""+kvTtl(url,parameter).getData());*/
-      /*  System.out.println(""+kvIncr(url,parameter1).getData());
-        System.out.println(""+kvIncrBy(url,parameterDetail1).getData());
+      //  System.out.println(""+kvIncr(url,parameter1).getData());
+      //  System.out.println(""+kvIncrBy(url,parameterDetail1).getData());
 
 
 
-        QKdMsetParameter msetParameter=new QKdMsetParameter();
+      /*  QKdMsetParameter msetParameter=new QKdMsetParameter();
         msetParameter.setAk("CuVEz/TxDu");
-        msetParameter.setUri("qkd://LIHANGTEST/6j");
+        msetParameter.setUri("qkd://BJTEST/6j");
         List<Entity> entities=new ArrayList<>();
         for(int i=0;i<length;i++){
             Entity entity=new Entity();
@@ -260,24 +247,24 @@ public class QianKunDaiUtils {
             entity.setV(i+"");
             entities.add(entity);
         }
-        msetParameter.setKs(entities);
+        msetParameter.setKs(entities);*/
 
         QkdMgetParameter msgtParameter=new QkdMgetParameter();
         msgtParameter.setAk("CuVEz/TxDu");
-        msgtParameter.setUri("qkd://LIHANGTEST/6j");
+        msgtParameter.setUri("qkd://BJTEST/6j");
         List<Key> ks=new ArrayList<>();
         for(int i=0;i<length;i++){
             Key key=new Key();
-            key.setK("key"+(i));
+            key.setK("laifeng_spamwordkey"+"_"+(i));
             ks.add(key);
         }
         msgtParameter.setKs(ks);
 
 
-        QkdMsetResult qkdMsetResult=kvMset(url,msetParameter);
-        System.out.println("mset执行时间:"+qkdMsetResult.getCost());
+       // QkdMsetResult qkdMsetResult=kvMset(url,msetParameter);
+      //  System.out.println("mset执行时间:"+qkdMsetResult.getCost());
         QkdMgetResult qkdMgetResult=kvMget(url,msgtParameter);
-        System.out.println("mget执行时间:"+qkdMgetResult.getCost());*/
+        System.out.println("mget执行时间:"+qkdMgetResult.getCost());
 
     }
 

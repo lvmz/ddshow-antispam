@@ -1,8 +1,9 @@
-package com.youku.ddshow.antispam.streaming.ugc;
+package com.youku.ddshow.antispam.test;
 
 import com.google.common.collect.Lists;
 import com.youku.ddshow.antispam.model.PropertiesType;
 import com.youku.ddshow.antispam.model.QianKunDai.QkdParameter;
+import com.youku.ddshow.antispam.streaming.ugc.UgcCommentAntiSpamByContent;
 import com.youku.ddshow.antispam.utils.Database;
 import com.youku.ddshow.antispam.utils.QianKunDaiUtils;
 import org.apache.spark.SparkConf;

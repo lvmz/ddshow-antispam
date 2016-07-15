@@ -6,6 +6,8 @@ package com.youku.ddshow.antispam.model;
 public enum PropertiesType {
     DDSHOW_STAT_TEST("druid_ddshow_stat_test.properties"),
     DDSHOW_STAT_ONLINE("druid_ddshow_stat_online.properties"),
+    DDSHOW_QKD_TEST("ddshow_qkd_test.properties"),
+    DDSHOW_QKD_ONLINE("ddshow_qkd_online.properties"),
     CONTROL_STAT("druid_control_stat.properties"),
     DDSHOW_PLATFORM_ONLINE("druid_ddshow_platform_online.properties"),
     DDSHOW_PLATFORM_TEST("druid_ddshow_platform_test.properties"),

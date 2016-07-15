@@ -1,29 +1,28 @@
 package com.youku.ddshow.antispam.streaming.ugc;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.youku.ddshow.antispam.model.PropertiesType;
-import com.youku.ddshow.antispam.model.UgcCommentLog;
+import com.youku.ddshow.antispam.model.UgcChat;
+import com.youku.ddshow.antispam.model.UgcChat;
 import com.youku.ddshow.antispam.utils.CalendarUtil;
 import com.youku.ddshow.antispam.utils.ContentKeyWordFilter;
 import com.youku.ddshow.antispam.utils.Database;
 import com.youku.ddshow.antispam.utils.LogUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.spark.Accumulator;
 import org.apache.spark.SparkConf;
-import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.Function2;
-import org.apache.spark.api.java.function.PairFunction;
 import org.apache.spark.api.java.function.VoidFunction;
 import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.storage.StorageLevel;
 import org.apache.spark.streaming.Duration;
 import org.apache.spark.streaming.Time;
 import org.apache.spark.streaming.api.java.JavaDStream;
-import org.apache.spark.streaming.api.java.JavaPairDStream;
 import org.apache.spark.streaming.api.java.JavaPairReceiverInputDStream;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.apache.spark.streaming.kafka.MqKafaUtil;
@@ -38,7 +37,7 @@ import java.util.regex.Pattern;
 /**
  * Created by dongjian on 2016/6/21.
  */
-public class UgcCommentAntiSpamByContent {
+public class UgcCommentAntiSpamByChatContent {
     private static final Pattern SPACE = Pattern.compile("\t");
     private static Database _db = null;
     public static void main(String[] args) throws IOException {
@@ -73,13 +72,13 @@ public class UgcCommentAntiSpamByContent {
         SparkConf sparkConf = new SparkConf().setAppName("UgcCommentAntiSpam").setExecutorEnv("file.encoding","UTF-8");
         // Create the context with 60 seconds batch size
 
-        final JavaStreamingContext jssc = new JavaStreamingContext(args[4],"UgcCommentAntiSpam", new Duration(dutationg),System.getenv("SPARK_HOME"), JavaSparkContext.jarOfClass(UgcCommentAntiSpamByContent.class));
+        final JavaStreamingContext jssc = new JavaStreamingContext(args[4],"UgcCommentAntiSpam", new Duration(dutationg),System.getenv("SPARK_HOME"), JavaSparkContext.jarOfClass(UgcCommentAntiSpamByChatContent.class));
         _db  =  new Database(PropertiesType.DDSHOW_STAT_ONLINE);
         ContentKeyWordFilter contentKeyWordFilter =  new ContentKeyWordFilter(PropertiesType.DDSHOW_QKD_TEST);
 
         final Broadcast<Database> broadcast   =   jssc.sc().broadcast(_db);
         final Broadcast<ContentKeyWordFilter> contentKeyWordFilterBroadcast   =   jssc.sc().broadcast(contentKeyWordFilter);
-
+        final Accumulator<Integer> intAccumulator =  jssc.sc().intAccumulator(0);
         int numThreads = Integer.parseInt(args[3]);
         Map<String, Integer> topicMap = new HashMap<String, Integer>();
         String[] topics = args[2].split(",");
@@ -114,75 +113,106 @@ public class UgcCommentAntiSpamByContent {
             }
         });
 
-        JavaDStream<ArrayList<String>> t_ugc_comment =     bigThen6.filter(new Function<ArrayList<String>, Boolean>() {
+        JavaDStream<ArrayList<String>> t_chat =     bigThen6.filter(new Function<ArrayList<String>, Boolean>() {
             @Override
             public Boolean call(ArrayList<String> strings) throws Exception {
-                return strings.get(6).equals("t_ugc_comment");
+                return strings.get(6).equals("t_chat");
             }
         });
 
-        JavaDStream<UgcCommentLog> t_ugc_comment_level0_role129_Object =   t_ugc_comment.map(new Function<ArrayList<String>, UgcCommentLog>() {
-            @Override
-            public UgcCommentLog call(ArrayList<String> strings) throws Exception {
-                UgcCommentLog ugcCommentLog = new UgcCommentLog();
 
-                ugcCommentLog.setIp(LogUtils.getIpBySeuenceId(strings.get(5)));
-                ugcCommentLog.setToken(LogUtils.getTokenBySeuenceId(strings.get(5)));
+        /**
+         *  {
+                "dataInfo": {
+                    "anchorLevel": 0,
+                    "content": "[亲亲]",
+                    "createDate": {
+                        "date": 12,
+                        "day": 2,
+                        "hours": 16,
+                        "minutes": 15,
+                        "month": 6,
+                        "seconds": 29,
+                        "time": 1468311329305,
+                        "timezoneOffset": -480,
+                        "year": 116
+                    },
+                    "id": 0,
+                    "methodName": "",
+                    "originUserId": 944483774,
+                    "originUserName": "矮油~我去",
+                    "roomId": 154680,
+                    "screenId": 2547180,
+                    "single": 0,
+                    "status": 0,
+                    "targetUserId": 900198977,
+                    "targetUserName": "AY_baby小雨",
+                    "userLevel": 0
+         }
+         }
+         */
+        JavaDStream<UgcChat> t_chat_Object =   t_chat.map(new Function<ArrayList<String>, UgcChat>() {
+            @Override
+            public UgcChat call(ArrayList<String> strings) throws Exception {
+
+                UgcChat ugcChat = new UgcChat();
+                ugcChat.setIp(LogUtils.getIpBySeuenceId(strings.get(5)));
+                ugcChat.setToken(LogUtils.getTokenBySeuenceId(strings.get(5)));
                 if(StringUtils.isNotBlank(strings.get(7)))
                 {
                     JSONObject dataJson = LogUtils.getUgcDataJson(strings.get(7));
-                    ugcCommentLog.setCommenterId(dataJson.containsKey("commenter")?dataJson.getInteger("commenter"):0);
-                    ugcCommentLog.setCommentId(dataJson.containsKey("id")?dataJson.getInteger("id"):0);
-                    ugcCommentLog.setEntityId(dataJson.containsKey("entityId")?dataJson.getInteger("entityId"):0);
-                    ugcCommentLog.setEntityType(dataJson.containsKey("entityType")?dataJson.getInteger("entityType"):0);
-                    ugcCommentLog.setContent(dataJson.containsKey("content")?dataJson.getString("content"):"");
-                    ugcCommentLog.setNickName(dataJson.containsKey("nickName")?dataJson.getString("nickName"):"");
-                    ugcCommentLog.setTimestamp(dataJson.containsKey("timestamp")?dataJson.getLongValue("timestamp"):0L);
+                    ugcChat.setAnchorLevel(dataJson.containsKey("anchorLevel")?dataJson.getInteger("anchorLevel"):0);
+                    ugcChat.setContent(dataJson.containsKey("content")?dataJson.getString("content"):"");
+                    JSONObject createDateJson =   LogUtils.getUgcDataJson(dataJson.containsKey("createDate")?dataJson.getString("createDate"):"");
+                    ugcChat.setCreateDate(createDateJson.containsKey("createTime")?createDateJson.getString("createTime"):"");
+                    ugcChat.setId(dataJson.containsKey("id")?dataJson.getInteger("id"):0);
+                    ugcChat.setMethodName(dataJson.containsKey("methodName")?dataJson.getString("methodName"):"");
+                    ugcChat.setOriginUserId(dataJson.containsKey("originUserId")?dataJson.getInteger("originUserId"):0);
+                    ugcChat.setOriginUserName(dataJson.containsKey("originUserName")?dataJson.getString("originUserName"):"");
+                    ugcChat.setRoomId(dataJson.containsKey("roomId")?dataJson.getInteger("roomId"):0);
+                    ugcChat.setScreenId(dataJson.containsKey("screenId")?dataJson.getInteger("screenId"):0);
+                    ugcChat.setSingle(dataJson.containsKey("single")?dataJson.getInteger("single"):0);
+                    ugcChat.setStatus(dataJson.containsKey("status")?dataJson.getInteger("status"):0);
+                    ugcChat.setTargetUserId(dataJson.containsKey("targetUserId")?dataJson.getInteger("targetUserId"):0);
+                    ugcChat.setTargetUserName(dataJson.containsKey("targetUserName")?dataJson.getString("targetUserName"):"");
+                    ugcChat.setUserLevel(dataJson.containsKey("userLevel")?dataJson.getInteger("userLevel"):0);
                 }
-
-                return ugcCommentLog;
+                return ugcChat;
             }
         });
 
-        t_ugc_comment_level0_role129_Object.filter(new Function<UgcCommentLog, Boolean>() {
+        t_chat_Object.filter(new Function<UgcChat, Boolean>() {
             @Override
-            public Boolean call(UgcCommentLog ugcCommentLog) throws Exception {
+            public Boolean call(UgcChat UgcChat) throws Exception {
                 ContentKeyWordFilter  contentKeyWordFilter =  contentKeyWordFilterBroadcast.getValue();
-                return contentKeyWordFilter.isSpamNickName(ugcCommentLog.getContent());
+                return contentKeyWordFilter.isSpamNickName(UgcChat.getContent());
             }
-        }).map(new Function<UgcCommentLog, String>() {
+        }).map(new Function<UgcChat, String>() {
             @Override
-            public String call(UgcCommentLog ugcCommentLog) throws Exception {
-                return ugcCommentLog.getContent();
+            public String call(UgcChat UgcChat) throws Exception {
+                return UgcChat.getContent();
             }
         }).print(5000);
 
-        t_ugc_comment_level0_role129_Object.filter(new Function<UgcCommentLog, Boolean>() {
+        t_chat_Object.filter(new Function<UgcChat, Boolean>() {
             @Override
-            public Boolean call(UgcCommentLog ugcCommentLog) throws Exception {
+            public Boolean call(UgcChat UgcChat) throws Exception {
                 ContentKeyWordFilter  contentKeyWordFilter =  contentKeyWordFilterBroadcast.getValue();
-                return contentKeyWordFilter.isSpamNickName(ugcCommentLog.getContent());
+                return contentKeyWordFilter.isSpamNickName(UgcChat.getContent());
             }
-        }).foreach(new Function2<JavaRDD<UgcCommentLog>, Time, Void>() {
+        }).foreach(new Function2<JavaRDD<UgcChat>, Time, Void>() {
             @Override
-            public Void call(JavaRDD<UgcCommentLog> ugcCommentLogJavaRDD, Time time) throws Exception {
+            public Void call(JavaRDD<UgcChat> UgcChatJavaRDD, Time time) throws Exception {
 
-                ugcCommentLogJavaRDD.foreach(new VoidFunction<UgcCommentLog>() {
+                UgcChatJavaRDD.foreach(new VoidFunction<UgcChat>() {
                     @Override
-                    public void call(UgcCommentLog ugcCommentLog) throws Exception {
-                        System.out.println("spamcontenwithkeyword-------->"+ugcCommentLog.getContent());
-                        Database db175 =   broadcast.getValue();
-                        if(db175!=null)
-                        {
-                            synchronized(db175){
-                                db175.execute(String.format("insert into t_result_ugc_comment_antispam (entity_type,entity_id,commenterId,ip,device_token,user_name,commentId,content,stat_time,user_level) values ('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s');"
-                                        ,ugcCommentLog.getEntityType(),ugcCommentLog.getEntityId(),ugcCommentLog.getCommenterId(), ugcCommentLog.getIp(), ugcCommentLog.getToken(), ugcCommentLog.getNickName()+"_keyword", ugcCommentLog.getCommentId(),
-                                        ugcCommentLog.getContent(), CalendarUtil.getDetailDateFormat(ugcCommentLog.getTimestamp()),ugcCommentLog.getUserLevel()));
-                            }
-                        }else
-                        {
-                            System.out.println("db175 is null!");
-                        }
+                    public void call(UgcChat ugcChat) throws Exception {
+                        ContentKeyWordFilter  contentKeyWordFilter =  contentKeyWordFilterBroadcast.getValue();
+                        System.out.println("spamcontenwithkeyword-------->"+ugcChat.getContent());
+                        intAccumulator.add(1);
+                        int num =  intAccumulator.value();
+                        System.out.println("intAccumulator value-------->"+num);
+                        contentKeyWordFilter.saveSpam2Qkd(JSON.toJSONString(ugcChat),num%1000);
                     }
                 });
                 return null;
