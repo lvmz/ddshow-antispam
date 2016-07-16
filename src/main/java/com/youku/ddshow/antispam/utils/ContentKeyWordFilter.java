@@ -159,7 +159,10 @@ public class ContentKeyWordFilter implements Serializable {
     public  static  void main(String[] args) throws IOException
     {
       ContentKeyWordFilter contentKeyWordFilter =  new ContentKeyWordFilter(PropertiesType.DDSHOW_QKD_TEST);
-        try {
+        Long a = System.currentTimeMillis();
+        System.out.println(contentKeyWordFilter.isSpamNickName("万部国.产日韩欧美制服动漫.看A.片.加微信 can664"));
+        System.out.println(System.currentTimeMillis()-a);
+       /* try {
                 String encoding="UTF-8";
                  File file=new File("D:\\文本分类\\antispam_keyword.txt");
                 if(file.isFile() && file.exists()){ //判断文件是否存在
@@ -181,6 +184,6 @@ public class ContentKeyWordFilter implements Serializable {
         } catch (Exception e) {
         System.out.println("读取文件内容出错");
         e.printStackTrace();
-        }
+        }*/
     }
 }

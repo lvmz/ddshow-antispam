@@ -2,9 +2,10 @@ package com.youku.ddshow.antispam.streaming.ugc;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.serializer.IntegerCodec;
+import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
-import com.youku.ddshow.antispam.model.PropertiesType;
-import com.youku.ddshow.antispam.model.UgcChat;
+import com.youku.ddshow.antispam.model.*;
 import com.youku.ddshow.antispam.model.UgcChat;
 import com.youku.ddshow.antispam.utils.CalendarUtil;
 import com.youku.ddshow.antispam.utils.ContentKeyWordFilter;
@@ -17,12 +18,14 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.Function2;
+import org.apache.spark.api.java.function.PairFunction;
 import org.apache.spark.api.java.function.VoidFunction;
 import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.storage.StorageLevel;
 import org.apache.spark.streaming.Duration;
 import org.apache.spark.streaming.Time;
 import org.apache.spark.streaming.api.java.JavaDStream;
+import org.apache.spark.streaming.api.java.JavaPairDStream;
 import org.apache.spark.streaming.api.java.JavaPairReceiverInputDStream;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.apache.spark.streaming.kafka.MqKafaUtil;
@@ -113,6 +116,75 @@ public class UgcCommentAntiSpamByChatContent {
             }
         });
 
+        /*JavaDStream<ArrayList<String>> t_room_user_count_detail  =     bigThen6.filter(new Function<ArrayList<String>, Boolean>() {
+            @Override
+            public Boolean call(ArrayList<String> strings) throws Exception {
+                return strings.get(6).equals("t_room_user_count_detail");
+            }
+        });
+
+      JavaDStream<UserRoomOnlineStatInfo> t_room_user_count_detail_Object =   t_room_user_count_detail.map(new Function<ArrayList<String>, UserRoomOnlineStatInfo>() {
+            @Override
+            public UserRoomOnlineStatInfo call(ArrayList<String> strings) throws Exception {
+
+                UserRoomOnlineStatInfo log = new UserRoomOnlineStatInfo();
+
+
+                log.setVersion(LogUtils.getIntValue(strings.get(0)));
+                log.setTimestamp(LogUtils.getLongValue(strings.get(1)));
+                log.setIp(LogUtils.getStringValue(strings.get(2)));
+                log.setAppId(LogUtils.getIntValue(strings.get(3)));
+                log.setCategory(LogUtils.getStringValue(strings.get(4)));
+                log.setCpsMid(LogUtils.getIntValue(strings.get(5)));
+                log.setCpsCid(LogUtils.getIntValue(strings.get(6)));
+                log.setCpsPid(LogUtils.getIntValue(strings.get(7)));
+                log.setCpsLpid(LogUtils.getIntValue(strings.get(8)));
+                log.setMachineId(LogUtils.getStringValue(strings.get(9)));
+                log.setYtId(LogUtils.getIntValue(strings.get(10)));
+                log.setUserId(LogUtils.getIntValue(strings.get(11)));
+                log.setTId(LogUtils.getIntValue(strings.get(12)));
+                log.setUserType(LogUtils.getIntValue(strings.get(13)));
+                log.setVip(LogUtils.getIntValue(strings.get(14))==1?true:false);
+                log.setRoom(LogUtils.getIntValue(strings.get(15)));
+                log.setAnchorId(LogUtils.getIntValue(strings.get(16)));
+                log.setAppVersion(LogUtils.getStringValue(strings.get(17)));
+                log.setOsVersion(LogUtils.getStringValue(strings.get(18)));
+                log.setDeviceToken(LogUtils.getStringValue(strings.get(19)));
+                log.setFk_origin_user(LogUtils.getIntValue(strings.get(20)));
+                log.setFk_target_user(LogUtils.getIntValue(strings.get(21)));
+                log.setUgcType(LogUtils.getStringValue(strings.get(22)));
+                log.setDataInfo(LogUtils.getStringValue(strings.get(23)));
+                log.setSequenceId(LogUtils.getIntValue(strings.get(24)));
+                return log;
+            }
+        });
+
+        t_room_user_count_detail_Object.mapToPair(new PairFunction<UserRoomOnlineStatInfo, String, Integer>() {
+            @Override
+            public Tuple2<String, Integer> call(UserRoomOnlineStatInfo userRoomOnlineStatInfo) throws Exception {
+                return new Tuple2<String, Integer>(userRoomOnlineStatInfo.getIp()+"-"+userRoomOnlineStatInfo.getRoom(),1);
+            }
+        }).groupByKey().mapToPair(new PairFunction<Tuple2<String,Iterable<Integer>>, String, Integer>() {
+            @Override
+            public Tuple2<String, Integer> call(Tuple2<String, Iterable<Integer>> stringIterableTuple2) throws Exception {
+                String ip_room = stringIterableTuple2._1();
+                String ip = ip_room.split("-")[0]==null?"":ip_room.split("-")[0];
+                return new Tuple2<String, Integer>(ip,1);
+            }
+        }).reduceByKey(new Function2<Integer, Integer, Integer>() {
+            @Override
+            public Integer call(Integer integer, Integer integer2) throws Exception {
+                return integer+integer2;
+            }
+        }).filter(new Function<Tuple2<String, Integer>, Boolean>() {
+            @Override
+            public Boolean call(Tuple2<String, Integer> stringIntegerTuple2) throws Exception {
+                return stringIntegerTuple2._2()>10;
+            }
+        }).print(5000);*/
+
+
+
         JavaDStream<ArrayList<String>> t_chat =     bigThen6.filter(new Function<ArrayList<String>, Boolean>() {
             @Override
             public Boolean call(ArrayList<String> strings) throws Exception {
@@ -181,7 +253,54 @@ public class UgcCommentAntiSpamByChatContent {
             }
         });
 
-        t_chat_Object.filter(new Function<UgcChat, Boolean>() {
+        JavaPairDStream<String, UgcChat> t_chat_Object_Ip =    t_chat_Object.mapToPair(new PairFunction<UgcChat, String, UgcChat>() {
+            @Override
+            public Tuple2<String, UgcChat> call(UgcChat ugcChat) throws Exception {
+                return new Tuple2<String, UgcChat>(ugcChat.getIp(),ugcChat);
+            }
+        });
+
+
+        t_chat_Object.mapToPair(new PairFunction<UgcChat, String, Integer>() {
+            @Override
+            public Tuple2<String, Integer> call(UgcChat ugcChat) throws Exception {
+                return new Tuple2<String, Integer>(ugcChat.getIp()+"-"+ugcChat.getRoomId(),1);
+            }
+        }).groupByKey().mapToPair(new PairFunction<Tuple2<String,Iterable<Integer>>, String, Integer>() {
+            @Override
+            public Tuple2<String, Integer> call(Tuple2<String, Iterable<Integer>> stringIterableTuple2) throws Exception {
+                String ip_room = stringIterableTuple2._1();
+                String ip = ip_room.split("-")[0]==null?"":ip_room.split("-")[0];
+                return new Tuple2<String, Integer>(ip,1);
+            }
+        }).reduceByKey(new Function2<Integer, Integer, Integer>() {
+            @Override
+            public Integer call(Integer integer, Integer integer2) throws Exception {
+                return integer+integer2;
+            }
+        }).filter(new Function<Tuple2<String, Integer>, Boolean>() {
+            @Override
+            public Boolean call(Tuple2<String, Integer> stringIntegerTuple2) throws Exception {
+                return stringIntegerTuple2._2()>20;
+            }
+        }).leftOuterJoin(t_chat_Object_Ip).map(new Function<Tuple2<String,Tuple2<Integer,Optional<UgcChat>>>, String>() {
+             @Override
+             public String call(Tuple2<String, Tuple2<Integer, Optional<UgcChat>>> stringTuple2Tuple2) throws Exception {
+                 Optional<UgcChat>  optional =  stringTuple2Tuple2._2()._2();
+                 UgcChat ugcChat = optional.orNull();
+                 if(ugcChat!=null)
+                 {
+                     return  ugcChat.getContent()+"_"+ugcChat.getOriginUserId()+"_"+ugcChat.getIp()+"_"+ugcChat.getRoomId()+"_"+stringTuple2Tuple2._2()._1();
+                 }else
+                 {
+                     return null;
+                 }
+             }
+         }).print(5000);
+
+
+
+       /* t_chat_Object.filter(new Function<UgcChat, Boolean>() {
             @Override
             public Boolean call(UgcChat UgcChat) throws Exception {
                 ContentKeyWordFilter  contentKeyWordFilter =  contentKeyWordFilterBroadcast.getValue();
@@ -212,12 +331,12 @@ public class UgcCommentAntiSpamByChatContent {
                         intAccumulator.add(1);
                         int num =  intAccumulator.value();
                         System.out.println("intAccumulator value-------->"+num);
-                        contentKeyWordFilter.saveSpam2Qkd(JSON.toJSONString(ugcChat),num%1000);
+                       // contentKeyWordFilter.saveSpam2Qkd(JSON.toJSONString(ugcChat),num%1000);
                     }
                 });
                 return null;
             }
-        });
+        });*/
         jssc.start();
         jssc.awaitTermination();
     }

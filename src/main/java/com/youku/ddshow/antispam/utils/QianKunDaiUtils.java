@@ -249,7 +249,7 @@ public class QianKunDaiUtils {
         }
         msetParameter.setKs(entities);*/
 
-        QkdMgetParameter msgtParameter=new QkdMgetParameter();
+    /*    QkdMgetParameter msgtParameter=new QkdMgetParameter();
         msgtParameter.setAk("CuVEz/TxDu");
         msgtParameter.setUri("qkd://BJTEST/6j");
         List<Key> ks=new ArrayList<>();
@@ -264,7 +264,7 @@ public class QianKunDaiUtils {
        // QkdMsetResult qkdMsetResult=kvMset(url,msetParameter);
       //  System.out.println("mset执行时间:"+qkdMsetResult.getCost());
         QkdMgetResult qkdMgetResult=kvMget(url,msgtParameter);
-        System.out.println("mget执行时间:"+qkdMgetResult.getCost());
+        System.out.println("mget执行时间:"+qkdMgetResult.getCost());*/
 
     }
 
