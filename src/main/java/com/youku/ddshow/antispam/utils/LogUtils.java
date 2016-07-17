@@ -325,6 +325,19 @@ public class LogUtils {
         return dataJson;
     }
 
+
+    public static JSONObject getUgcChatDateJson(String dataInfo) {
+        JSONObject dataJson = null;
+        if (StringUtils.isNotBlank(dataInfo) && !"{}".equals(dataInfo)) {
+            dataJson = new JSONObject();
+            JSONObject dataInfoJson = JSONObject.parseObject(dataInfo);
+            if (null != dataInfoJson && dataInfoJson.containsKey("createDate")) {
+                dataJson = (JSONObject) dataInfoJson.get("createDate");
+            }
+        }
+        return dataJson;
+    }
+
     /**
      * 获取clientInfo信息
      */
