@@ -153,6 +153,7 @@ public class QianKunDaiUtils {
         QkdMgetResult qkdMesult=new QkdMgetResult();
         try {
             String result = post(url+KV_MGET, JSON.toJSONString(parameter));
+            System.out.println(result);
             qkdMesult=JSON.parseObject(result, QkdMgetResult.class);
         } catch (Exception e) {
             e.printStackTrace();
@@ -203,7 +204,7 @@ public class QianKunDaiUtils {
     public static void main(String[] args) {
         String url="http://10.100.23.57:80/hdp/kvstore/kv/";
         int length=1000;
-        QkdParameter parameter=new QkdParameter();
+      /*  QkdParameter parameter=new QkdParameter();
         parameter.setAk("CuVEz/TxDu");
         parameter.setK("spamWordKey");
         parameter.setUri("qkd://BJTEST/6j");
@@ -229,7 +230,7 @@ public class QianKunDaiUtils {
        //kvSet(url,parameterDetail);
         System.out.println(""+  kvGet(url,parameter).getV());
        // kvDel(url,parameter);
-        System.out.println(""+ kvGet(url,parameter).getV());
+        System.out.println(""+ kvGet(url,parameter).getV());*/
  /*       kvSet(url,parameterDetail);
         System.out.println(""+kvTtl(url,parameter).getData());*/
       //  System.out.println(""+kvIncr(url,parameter1).getData());
@@ -249,11 +250,11 @@ public class QianKunDaiUtils {
         }
         msetParameter.setKs(entities);*/
 
-    /*    QkdMgetParameter msgtParameter=new QkdMgetParameter();
+        QkdMgetParameter msgtParameter=new QkdMgetParameter();
         msgtParameter.setAk("CuVEz/TxDu");
         msgtParameter.setUri("qkd://BJTEST/6j");
         List<Key> ks=new ArrayList<>();
-        for(int i=0;i<length;i++){
+        for(int i=10;i<length;i++){
             Key key=new Key();
             key.setK("laifeng_spamwordkey"+"_"+(i));
             ks.add(key);
@@ -264,7 +265,8 @@ public class QianKunDaiUtils {
        // QkdMsetResult qkdMsetResult=kvMset(url,msetParameter);
       //  System.out.println("mset执行时间:"+qkdMsetResult.getCost());
         QkdMgetResult qkdMgetResult=kvMget(url,msgtParameter);
-        System.out.println("mget执行时间:"+qkdMgetResult.getCost());*/
+
+        System.out.println("mget执行时间:"+qkdMgetResult.getCost());
 
     }
 

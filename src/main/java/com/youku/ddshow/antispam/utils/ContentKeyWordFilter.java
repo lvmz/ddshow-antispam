@@ -144,7 +144,7 @@ public class ContentKeyWordFilter implements Serializable {
         QianKunDaiUtils.kvSet(url,parameterDetail);
     }
 
-    public  void saveSpam2Qkd(String value,Integer keyNum)
+    public  void saveSpam2Qkd(String value,String key,Integer keyNum)
     {
         String url=props.getProperty("url");
         QkdParameterDetail parameterDetail=new QkdParameterDetail();
@@ -154,7 +154,7 @@ public class ContentKeyWordFilter implements Serializable {
         parameterDetail.setUri(props.getProperty("uri"));
         QkdParameter parameter=new QkdParameter();
         parameter.setAk(props.getProperty("appKey"));
-        parameter.setK(props.getProperty("saveSpamWordKey")+"_"+keyNum);
+        parameter.setK(key+"_"+keyNum);
         parameter.setUri(props.getProperty("uri"));
         String valueold = QianKunDaiUtils.kvGet(url,parameter).getV();
         if(valueold!=null)

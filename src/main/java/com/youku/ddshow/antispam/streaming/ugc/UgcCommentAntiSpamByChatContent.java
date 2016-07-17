@@ -66,13 +66,14 @@ public class UgcCommentAntiSpamByChatContent {
 
         //************************************线上用**************************************************
         if (args.length < 5) {
-            System.err.println("Usage: UgcCommentAntiSpam <token> <group> <topics> <numThreads> <master> <dutationg> <connections>");
+            System.err.println("Usage: UgcCommentAntiSpam <token> <group> <topics> <numThreads> <master> <dutationg> <connections> <rediskey>");
             System.exit(1);
         }
 
 
         final  Long dutationg = Long.parseLong(args[5]);
         final  Integer connections = Integer.parseInt(args[6]);
+        final  String rediskey = args[7];
         SparkConf sparkConf = new SparkConf().setAppName("UgcCommentAntiSpam").setExecutorEnv("file.encoding","UTF-8");
         // Create the context with 60 seconds batch size
 
@@ -292,7 +293,7 @@ public class UgcCommentAntiSpamByChatContent {
                  if(ugcChat!=null)
                  {
                      ContentKeyWordFilter  contentKeyWordFilter =  contentKeyWordFilterBroadcast.getValue();
-                     contentKeyWordFilter.saveSpam2Qkd(ugcChat.getContent(),stringTuple2Tuple2._2()._1());
+                     contentKeyWordFilter.saveSpam2Qkd(ugcChat.getContent(),rediskey,stringTuple2Tuple2._2()._1());
                      StringBuilder stringBuilder = new StringBuilder();
                      stringBuilder.append(stringTuple2Tuple2._2()._1()+"\t")
                      .append(CalendarUtil.getDetailDateFormat(StringUtils.isNotEmpty(ugcChat.getCreateDate())?Long.parseLong(ugcChat.getCreateDate()):0L)+"\t")
