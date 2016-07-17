@@ -294,14 +294,14 @@ public class UgcCommentAntiSpamByChatContent {
                      ContentKeyWordFilter  contentKeyWordFilter =  contentKeyWordFilterBroadcast.getValue();
                      contentKeyWordFilter.saveSpam2Qkd(ugcChat.getContent(),stringTuple2Tuple2._2()._1());
                      StringBuilder stringBuilder = new StringBuilder();
-                     stringBuilder.append(stringTuple2Tuple2._2()._1()+"_")
-                     .append(CalendarUtil.getDetailDateFormat(StringUtils.isNotEmpty(ugcChat.getCreateDate())?Long.parseLong(ugcChat.getCreateDate()):0L)+"_")
-                     .append(ugcChat.getContent()+"_")
-                     .append(ugcChat.getIp()+"_")
-                     .append(ugcChat.getRoomId()+"_")
-                     .append(ugcChat.getUserLevel()+"_")
-                     .append(ugcChat.getOriginUserId()+"_")
-                     .append(ugcChat.getTargetUserId()+"_");
+                     stringBuilder.append(stringTuple2Tuple2._2()._1()+"\t")
+                     .append(CalendarUtil.getDetailDateFormat(StringUtils.isNotEmpty(ugcChat.getCreateDate())?Long.parseLong(ugcChat.getCreateDate()):0L)+"\t")
+                     .append(ugcChat.getIp()+"\t")
+                     .append(ugcChat.getRoomId()+"\t")
+                     .append(ugcChat.getUserLevel()+"\t")
+                     .append(ugcChat.getOriginUserId()+"\t")
+                     .append(ugcChat.getTargetUserId()+"\t")
+                     .append(ugcChat.getContent()+"\t");
                      return stringBuilder.toString();
                  }else
                  {
