@@ -293,7 +293,9 @@ public class UgcCommentAntiSpamByChatContent {
                  {
                      ContentKeyWordFilter  contentKeyWordFilter =  contentKeyWordFilterBroadcast.getValue();
                      contentKeyWordFilter.saveSpam2Qkd(ugcChat.getContent(),stringTuple2Tuple2._2()._1());
-                     return  ugcChat.getContent()+"_"+ugcChat.getOriginUserId()+"_"+ugcChat.getIp()+"_"+ugcChat.getRoomId()+"_"+stringTuple2Tuple2._2()._1();
+                     StringBuilder stringBuilder = new StringBuilder();
+                     stringBuilder.append( JSON.toJSONString(ugcChat)).append(CalendarUtil.getDetailDateFormat(StringUtils.isNotEmpty(ugcChat.getCreateDate())?Long.parseLong(ugcChat.getCreateDate()):0L));
+                     return stringBuilder.toString();
                  }else
                  {
                      return null;
