@@ -254,9 +254,9 @@ public class QianKunDaiUtils {
         msgtParameter.setAk("CuVEz/TxDu");
         msgtParameter.setUri("qkd://BJTEST/6j");
         List<Key> ks=new ArrayList<>();
-        for(int i=10;i<length;i++){
+        for(int i=0;i<length;i++){
             Key key=new Key();
-            key.setK("rediskey10"+"_"+(i));
+            key.setK("rediskey10_1"+"_"+(i));
             ks.add(key);
         }
         msgtParameter.setKs(ks);
