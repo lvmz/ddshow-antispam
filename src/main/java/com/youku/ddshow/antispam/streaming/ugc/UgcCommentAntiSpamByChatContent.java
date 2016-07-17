@@ -66,12 +66,13 @@ public class UgcCommentAntiSpamByChatContent {
 
         //************************************线上用**************************************************
         if (args.length < 5) {
-            System.err.println("Usage: UgcCommentAntiSpam <token> <group> <topics> <numThreads> <master> <dutationg>");
+            System.err.println("Usage: UgcCommentAntiSpam <token> <group> <topics> <numThreads> <master> <dutationg> <connections>");
             System.exit(1);
         }
 
 
         final  Long dutationg = Long.parseLong(args[5]);
+        final  Integer connections = Integer.parseInt(args[6]);
         SparkConf sparkConf = new SparkConf().setAppName("UgcCommentAntiSpam").setExecutorEnv("file.encoding","UTF-8");
         // Create the context with 60 seconds batch size
 
@@ -281,7 +282,7 @@ public class UgcCommentAntiSpamByChatContent {
         }).filter(new Function<Tuple2<String, Integer>, Boolean>() {
             @Override
             public Boolean call(Tuple2<String, Integer> stringIntegerTuple2) throws Exception {
-                return stringIntegerTuple2._2()>20;
+                return stringIntegerTuple2._2()>connections;
             }
         }).leftOuterJoin(t_chat_Object_Ip).map(new Function<Tuple2<String,Tuple2<Integer,Optional<UgcChat>>>, String>() {
              @Override
