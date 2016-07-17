@@ -152,8 +152,17 @@ public class ContentKeyWordFilter implements Serializable {
         parameterDetail.setK(props.getProperty("saveSpamWordKey")+"_"+keyNum);
         System.out.println("key------------>"+props.getProperty("saveSpamWordKey")+"_"+keyNum);
         parameterDetail.setUri(props.getProperty("uri"));
-        parameterDetail.setV(value);
-        QianKunDaiUtils.kvSet(url,parameterDetail);
+        QkdParameter parameter=new QkdParameter();
+        parameter.setAk(props.getProperty("appKey"));
+        parameter.setK(props.getProperty("saveSpamWordKey")+"_"+keyNum);
+        parameter.setUri(props.getProperty("uri"));
+        String valueold = QianKunDaiUtils.kvGet(url,parameter).getV();
+        if(!valueold.contains(value))
+        {
+            valueold=valueold+"_"+value;
+            parameterDetail.setV(valueold);
+            QianKunDaiUtils.kvSet(url,parameterDetail);
+        }
     }
 
     public  static  void main(String[] args) throws IOException

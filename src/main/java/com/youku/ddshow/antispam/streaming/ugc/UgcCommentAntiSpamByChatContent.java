@@ -291,6 +291,8 @@ public class UgcCommentAntiSpamByChatContent {
                  UgcChat ugcChat = optional.orNull();
                  if(ugcChat!=null)
                  {
+                     ContentKeyWordFilter  contentKeyWordFilter =  contentKeyWordFilterBroadcast.getValue();
+                     contentKeyWordFilter.saveSpam2Qkd(ugcChat.getContent(),stringTuple2Tuple2._2()._1());
                      return  ugcChat.getContent()+"_"+ugcChat.getOriginUserId()+"_"+ugcChat.getIp()+"_"+ugcChat.getRoomId()+"_"+stringTuple2Tuple2._2()._1();
                  }else
                  {
