@@ -256,7 +256,7 @@ public class QianKunDaiUtils {
         List<Key> ks=new ArrayList<>();
         for(int i=10;i<length;i++){
             Key key=new Key();
-            key.setK("laifeng_spamwordkey"+"_"+(i));
+            key.setK("rediskey10"+"_"+(i));
             ks.add(key);
         }
         msgtParameter.setKs(ks);

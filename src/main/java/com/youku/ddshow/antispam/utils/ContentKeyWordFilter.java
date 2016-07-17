@@ -149,8 +149,8 @@ public class ContentKeyWordFilter implements Serializable {
         String url=props.getProperty("url");
         QkdParameterDetail parameterDetail=new QkdParameterDetail();
         parameterDetail.setAk(props.getProperty("appKey"));
-        parameterDetail.setK(props.getProperty("saveSpamWordKey")+"_"+keyNum);
-        System.out.println("key------------>"+props.getProperty("saveSpamWordKey")+"_"+keyNum);
+        parameterDetail.setK(key+"_"+keyNum);
+        System.out.println("key------------>"+key+"_"+keyNum);
         parameterDetail.setUri(props.getProperty("uri"));
         QkdParameter parameter=new QkdParameter();
         parameter.setAk(props.getProperty("appKey"));
