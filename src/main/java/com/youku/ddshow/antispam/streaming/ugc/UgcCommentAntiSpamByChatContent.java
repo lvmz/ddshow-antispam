@@ -236,7 +236,7 @@ public class UgcCommentAntiSpamByChatContent {
                     JSONObject dataJson = LogUtils.getUgcDataJson(strings.get(7));
                     ugcChat.setAnchorLevel(dataJson.containsKey("anchorLevel")?dataJson.getInteger("anchorLevel"):0);
                     ugcChat.setContent(dataJson.containsKey("content")?dataJson.getString("content"):"");
-                    JSONObject createDateJson =   LogUtils.getUgcChatDateJson(dataJson.containsKey("createDate")?dataJson.getString("createDate"):"");
+                    JSONObject createDateJson =  JSONObject.parseObject(dataJson.containsKey("createDate")?dataJson.getString("createDate"):"");
                     ugcChat.setCreateDate(createDateJson.containsKey("time")?createDateJson.getString("time"):"");
                     ugcChat.setId(dataJson.containsKey("id")?dataJson.getInteger("id"):0);
                     ugcChat.setMethodName(dataJson.containsKey("methodName")?dataJson.getString("methodName"):"");
