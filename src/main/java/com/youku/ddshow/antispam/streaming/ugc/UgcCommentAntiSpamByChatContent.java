@@ -237,7 +237,7 @@ public class UgcCommentAntiSpamByChatContent {
                     ugcChat.setAnchorLevel(dataJson.containsKey("anchorLevel")?dataJson.getInteger("anchorLevel"):0);
                     ugcChat.setContent(dataJson.containsKey("content")?dataJson.getString("content"):"");
                     JSONObject createDateJson =   LogUtils.getUgcDataJson(dataJson.containsKey("createDate")?dataJson.getString("createDate"):"");
-                    ugcChat.setCreateDate(createDateJson.containsKey("createTime")?createDateJson.getString("createTime"):"");
+                    ugcChat.setCreateDate(createDateJson.containsKey("time")?createDateJson.getString("time"):"");
                     ugcChat.setId(dataJson.containsKey("id")?dataJson.getInteger("id"):0);
                     ugcChat.setMethodName(dataJson.containsKey("methodName")?dataJson.getString("methodName"):"");
                     ugcChat.setOriginUserId(dataJson.containsKey("originUserId")?dataJson.getInteger("originUserId"):0);
@@ -294,7 +294,14 @@ public class UgcCommentAntiSpamByChatContent {
                      ContentKeyWordFilter  contentKeyWordFilter =  contentKeyWordFilterBroadcast.getValue();
                      contentKeyWordFilter.saveSpam2Qkd(ugcChat.getContent(),stringTuple2Tuple2._2()._1());
                      StringBuilder stringBuilder = new StringBuilder();
-                     stringBuilder.append( JSON.toJSONString(ugcChat)).append(CalendarUtil.getDetailDateFormat(StringUtils.isNotEmpty(ugcChat.getCreateDate())?Long.parseLong(ugcChat.getCreateDate()):0L));
+                     stringBuilder.append(stringTuple2Tuple2._2()._1()+"_")
+                     .append(CalendarUtil.getDetailDateFormat(StringUtils.isNotEmpty(ugcChat.getCreateDate())?Long.parseLong(ugcChat.getCreateDate()):0L)+"_")
+                     .append(ugcChat.getContent()+"_")
+                     .append(ugcChat.getIp()+"_")
+                     .append(ugcChat.getRoomId()+"_")
+                     .append(ugcChat.getUserLevel()+"_")
+                     .append(ugcChat.getOriginUserId()+"_")
+                     .append(ugcChat.getTargetUserId()+"_");
                      return stringBuilder.toString();
                  }else
                  {
