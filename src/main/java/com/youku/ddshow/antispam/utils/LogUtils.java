@@ -325,6 +325,24 @@ public class LogUtils {
         return dataJson;
     }
 
+    /**
+     * 获取t_user update 消息内容
+     *
+     * @param dataMap
+     * @return
+     */
+    public static JSONObject getTUserUpdate(String dataMap) {
+        JSONObject dataJson = null;
+        if (StringUtils.isNotBlank(dataMap) && !"{}".equals(dataMap)) {
+            dataJson = new JSONObject();
+            JSONObject dataInfoJson = JSONObject.parseObject(dataMap);
+            if (null != dataInfoJson && dataInfoJson.containsKey("dataMap")) {
+                dataJson = (JSONObject) dataInfoJson.get("dataMap");
+            }
+        }
+        return dataJson;
+    }
+
 
     public static JSONObject getUgcChatDateJson(String dataInfo) {
         JSONObject dataJson = null;

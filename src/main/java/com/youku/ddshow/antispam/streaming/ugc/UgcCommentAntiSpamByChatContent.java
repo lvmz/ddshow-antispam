@@ -16,10 +16,7 @@ import org.apache.spark.Accumulator;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.api.java.function.Function;
-import org.apache.spark.api.java.function.Function2;
-import org.apache.spark.api.java.function.PairFunction;
-import org.apache.spark.api.java.function.VoidFunction;
+import org.apache.spark.api.java.function.*;
 import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.storage.StorageLevel;
 import org.apache.spark.streaming.Duration;
@@ -34,6 +31,7 @@ import scala.Tuple2;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -43,6 +41,42 @@ import java.util.regex.Pattern;
 public class UgcCommentAntiSpamByChatContent {
     private static final Pattern SPACE = Pattern.compile("\t");
     private static Database _db = null;
+    private  static  String save2db(Tuple2<String, Tuple2<Integer, Optional<UgcChat>>> stringTuple2Tuple2,Broadcast<ContentKeyWordFilter> contentKeyWordFilterBroadcast,Broadcast<Database> broadcast,String rediskey,String tablename)
+    {
+        Optional<UgcChat>  optional =  stringTuple2Tuple2._2()._2();
+        UgcChat ugcChat = optional.orNull();
+        if(ugcChat!=null)
+        {
+            ContentKeyWordFilter  contentKeyWordFilter =  contentKeyWordFilterBroadcast.getValue();
+
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append(stringTuple2Tuple2._2()._1()+" ")
+                    .append(CalendarUtil.getDetailDateFormat(StringUtils.isNotEmpty(ugcChat.getCreateDate())?Long.parseLong(ugcChat.getCreateDate()):0L)+" ")
+                    .append(ugcChat.getIp()+" ")
+                    .append(ugcChat.getRoomId()+" ")
+                    .append(ugcChat.getUserLevel()+" ")
+                    .append(ugcChat.getOriginUserId()+" ")
+                    .append(ugcChat.getTargetUserId()+" ")
+                    .append(ugcChat.getContent()+" ");
+            contentKeyWordFilter.saveSpam2Qkd(stringBuilder.toString()+"|",rediskey,stringTuple2Tuple2._2()._1());
+            Database db175 =   broadcast.getValue();
+            if(db175!=null)
+            {
+                synchronized(db175){
+                    db175.execute(String.format("insert into "+tablename+" (origin_userid,origin_username,target_userid,target_username,roomid,screenid,ip,content,stat_time,user_level) values ('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s');"
+                            ,ugcChat.getOriginUserId(),ugcChat.getOriginUserName()+"_c",ugcChat.getTargetUserId(),ugcChat.getTargetUserName(),ugcChat.getRoomId(),ugcChat.getScreenId(),ugcChat.getIp(),ugcChat.getContent(),
+                            CalendarUtil.getDetailDateFormat(StringUtils.isNotEmpty(ugcChat.getCreateDate())?Long.parseLong(ugcChat.getCreateDate()):0L),ugcChat.getUserLevel()));
+                }
+            }else
+            {
+                System.out.println("db175 is null!");
+            }
+            return stringBuilder.toString();
+        }else
+        {
+            return null;
+        }
+    }
     public static void main(String[] args) throws IOException {
         //************************************开发用**************************************************
        /* if (args.length < 5) {
@@ -262,8 +296,84 @@ public class UgcCommentAntiSpamByChatContent {
             }
         });
 
+        JavaPairDStream<String, UgcChat> t_chat_Object_Id =    t_chat_Object.mapToPair(new PairFunction<UgcChat, String, UgcChat>() {
+            @Override
+            public Tuple2<String, UgcChat> call(UgcChat ugcChat) throws Exception {
+                return new Tuple2<String, UgcChat>(String.valueOf(ugcChat.getOriginUserId()),ugcChat);
+            }
+        });
 
-        t_chat_Object.mapToPair(new PairFunction<UgcChat, String, Integer>() {
+
+        JavaPairDStream<String, Tuple2<Integer, Optional<UgcChat>>> leftOuterJoinId =    t_chat_Object.mapToPair(new PairFunction<UgcChat, String, Integer>() {
+            @Override
+            public Tuple2<String, Integer> call(UgcChat ugcChat) throws Exception {
+                return new Tuple2<String, Integer>(ugcChat.getOriginUserId()+"-"+ugcChat.getRoomId(),1);
+            }
+        }).groupByKey().mapToPair(new PairFunction<Tuple2<String,Iterable<Integer>>, String, Integer>() {
+            @Override
+            public Tuple2<String, Integer> call(Tuple2<String, Iterable<Integer>> stringIterableTuple2) throws Exception {
+                String id_room = stringIterableTuple2._1();
+                String id = id_room.split("-")[0]==null?"":id_room.split("-")[0];
+                return new Tuple2<String, Integer>(id,1);
+            }
+        }).reduceByKey(new Function2<Integer, Integer, Integer>() {
+            @Override
+            public Integer call(Integer integer, Integer integer2) throws Exception {
+                return integer+integer2;
+            }
+        }).filter(new Function<Tuple2<String, Integer>, Boolean>() {
+            @Override
+            public Boolean call(Tuple2<String, Integer> stringIntegerTuple2) throws Exception {
+                return stringIntegerTuple2._2()>connections;
+            }
+        }).leftOuterJoin(t_chat_Object_Id);
+
+        leftOuterJoinId.filter(new Function<Tuple2<String, Tuple2<Integer, Optional<UgcChat>>>, Boolean>() {
+            @Override
+            public Boolean call(Tuple2<String, Tuple2<Integer, Optional<UgcChat>>> stringTuple2Tuple2) throws Exception {
+                Optional<UgcChat>  optional =  stringTuple2Tuple2._2()._2();
+                UgcChat ugcChat = optional.orNull();
+                return ugcChat.getUserLevel()==0;
+            }
+        }).map(new Function<Tuple2<String,Tuple2<Integer,Optional<UgcChat>>>, String>() {
+            @Override
+            public String call(Tuple2<String, Tuple2<Integer, Optional<UgcChat>>> stringTuple2Tuple2) throws Exception {
+                return save2db(stringTuple2Tuple2,contentKeyWordFilterBroadcast,broadcast,rediskey,"t_result_chat_antispam");
+            }
+        }).print();
+
+        leftOuterJoinId.filter(new Function<Tuple2<String, Tuple2<Integer, Optional<UgcChat>>>, Boolean>() {
+            @Override
+            public Boolean call(Tuple2<String, Tuple2<Integer, Optional<UgcChat>>> stringTuple2Tuple2) throws Exception {
+                Optional<UgcChat>  optional =  stringTuple2Tuple2._2()._2();
+                UgcChat ugcChat = optional.orNull();
+                return ugcChat.getUserLevel()>0;
+            }
+        }).map(new Function<Tuple2<String,Tuple2<Integer,Optional<UgcChat>>>, Tuple2<String,Tuple2<Integer,Optional<UgcChat>>>>() {
+            @Override
+            public Tuple2<String,Tuple2<Integer,Optional<UgcChat>>> call(Tuple2<String, Tuple2<Integer, Optional<UgcChat>>> stringTuple2Tuple2) throws Exception {
+                save2db(stringTuple2Tuple2,contentKeyWordFilterBroadcast,broadcast,rediskey,"t_result_chat_antispam_level");
+                return stringTuple2Tuple2;
+            }
+        }).filter(new Function<Tuple2<String, Tuple2<Integer, Optional<UgcChat>>>, Boolean>() {
+            @Override
+            public Boolean call(Tuple2<String, Tuple2<Integer, Optional<UgcChat>>> stringTuple2Tuple2) throws Exception {
+                Optional<UgcChat>  optional =  stringTuple2Tuple2._2()._2();
+                UgcChat ugcChat = optional.orNull();
+                ContentKeyWordFilter  contentKeyWordFilter =  contentKeyWordFilterBroadcast.getValue();
+                return contentKeyWordFilter.isSpamNickName(ugcChat.getContent())&&ugcChat.getUserLevel()<5;
+            }
+        }).map(new Function<Tuple2<String,Tuple2<Integer,Optional<UgcChat>>>, String>() {
+            @Override
+            public String call(Tuple2<String, Tuple2<Integer, Optional<UgcChat>>> stringTuple2Tuple2) throws Exception {
+                return save2db(stringTuple2Tuple2,contentKeyWordFilterBroadcast,broadcast,rediskey,"t_result_chat_antispam");
+            }
+        }).print();
+
+
+
+
+      /*  JavaPairDStream<String, Tuple2<Integer, Optional<UgcChat>>> leftOuterJoinIp =    t_chat_Object.mapToPair(new PairFunction<UgcChat, String, Integer>() {
             @Override
             public Tuple2<String, Integer> call(UgcChat ugcChat) throws Exception {
                 return new Tuple2<String, Integer>(ugcChat.getIp()+"-"+ugcChat.getRoomId(),1);
@@ -285,31 +395,51 @@ public class UgcCommentAntiSpamByChatContent {
             public Boolean call(Tuple2<String, Integer> stringIntegerTuple2) throws Exception {
                 return stringIntegerTuple2._2()>connections;
             }
-        }).leftOuterJoin(t_chat_Object_Ip).map(new Function<Tuple2<String,Tuple2<Integer,Optional<UgcChat>>>, String>() {
+        }).leftOuterJoin(t_chat_Object_Ip);
+
+
+        leftOuterJoinIp.filter(new Function<Tuple2<String, Tuple2<Integer, Optional<UgcChat>>>, Boolean>() {
+            @Override
+            public Boolean call(Tuple2<String, Tuple2<Integer, Optional<UgcChat>>> stringTuple2Tuple2) throws Exception {
+                Optional<UgcChat>  optional =  stringTuple2Tuple2._2()._2();
+                UgcChat ugcChat = optional.orNull();
+                return ugcChat.getUserLevel()==0;
+            }
+        }).map(new Function<Tuple2<String,Tuple2<Integer,Optional<UgcChat>>>, String>() {
              @Override
              public String call(Tuple2<String, Tuple2<Integer, Optional<UgcChat>>> stringTuple2Tuple2) throws Exception {
-                 Optional<UgcChat>  optional =  stringTuple2Tuple2._2()._2();
-                 UgcChat ugcChat = optional.orNull();
-                 if(ugcChat!=null)
-                 {
-                     ContentKeyWordFilter  contentKeyWordFilter =  contentKeyWordFilterBroadcast.getValue();
-                     contentKeyWordFilter.saveSpam2Qkd(ugcChat.getContent(),rediskey,stringTuple2Tuple2._2()._1());
-                     StringBuilder stringBuilder = new StringBuilder();
-                     stringBuilder.append(stringTuple2Tuple2._2()._1()+"\t")
-                     .append(CalendarUtil.getDetailDateFormat(StringUtils.isNotEmpty(ugcChat.getCreateDate())?Long.parseLong(ugcChat.getCreateDate()):0L)+"\t")
-                     .append(ugcChat.getIp()+"\t")
-                     .append(ugcChat.getRoomId()+"\t")
-                     .append(ugcChat.getUserLevel()+"\t")
-                     .append(ugcChat.getOriginUserId()+"\t")
-                     .append(ugcChat.getTargetUserId()+"\t")
-                     .append(ugcChat.getContent()+"\t");
-                     return stringBuilder.toString();
-                 }else
-                 {
-                     return null;
-                 }
+                 return save2db(stringTuple2Tuple2,contentKeyWordFilterBroadcast,broadcast,rediskey,"t_result_chat_antispam");
              }
-         }).print(5000);
+         }).print();
+
+        leftOuterJoinIp.filter(new Function<Tuple2<String, Tuple2<Integer, Optional<UgcChat>>>, Boolean>() {
+            @Override
+            public Boolean call(Tuple2<String, Tuple2<Integer, Optional<UgcChat>>> stringTuple2Tuple2) throws Exception {
+                Optional<UgcChat>  optional =  stringTuple2Tuple2._2()._2();
+                UgcChat ugcChat = optional.orNull();
+                return ugcChat.getUserLevel()>0;
+            }
+        }).map(new Function<Tuple2<String,Tuple2<Integer,Optional<UgcChat>>>, Tuple2<String,Tuple2<Integer,Optional<UgcChat>>>>() {
+            @Override
+            public Tuple2<String,Tuple2<Integer,Optional<UgcChat>>> call(Tuple2<String, Tuple2<Integer, Optional<UgcChat>>> stringTuple2Tuple2) throws Exception {
+                save2db(stringTuple2Tuple2,contentKeyWordFilterBroadcast,broadcast,rediskey,"t_result_chat_antispam_level");
+                return stringTuple2Tuple2;
+            }
+        }).filter(new Function<Tuple2<String, Tuple2<Integer, Optional<UgcChat>>>, Boolean>() {
+            @Override
+            public Boolean call(Tuple2<String, Tuple2<Integer, Optional<UgcChat>>> stringTuple2Tuple2) throws Exception {
+                Optional<UgcChat>  optional =  stringTuple2Tuple2._2()._2();
+                UgcChat ugcChat = optional.orNull();
+                ContentKeyWordFilter  contentKeyWordFilter =  contentKeyWordFilterBroadcast.getValue();
+                return contentKeyWordFilter.isSpamNickName(ugcChat.getContent())&&ugcChat.getUserLevel()<5;
+            }
+        }).map(new Function<Tuple2<String,Tuple2<Integer,Optional<UgcChat>>>, String>() {
+            @Override
+            public String call(Tuple2<String, Tuple2<Integer, Optional<UgcChat>>> stringTuple2Tuple2) throws Exception {
+                return save2db(stringTuple2Tuple2,contentKeyWordFilterBroadcast,broadcast,rediskey,"t_result_chat_antispam");
+            }
+        }).print();*/
+
 
 
 

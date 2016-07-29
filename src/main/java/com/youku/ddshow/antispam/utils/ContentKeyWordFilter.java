@@ -39,7 +39,7 @@ public class ContentKeyWordFilter implements Serializable {
     }
 
     public static  void  loadspamNickNameDic(Map<String,String>  spamNickNameMap) throws IOException {
-        InputStream in = Database.class.getClassLoader().getResourceAsStream(
+        InputStream in = ContentKeyWordFilter.class.getClassLoader().getResourceAsStream(
                 "contentSpamKeyWord.dic");
         BufferedReader in2=new BufferedReader(new InputStreamReader(in));
         String y="";
@@ -92,7 +92,7 @@ public class ContentKeyWordFilter implements Serializable {
             }
         }
 
-        Set redisSet = getSetFromQkd();
+       Set redisSet = getSetFromQkd();
         if(redisSet!=null)
         {
             Iterator it2 = redisSet.iterator();
@@ -176,7 +176,7 @@ public class ContentKeyWordFilter implements Serializable {
     {
       ContentKeyWordFilter contentKeyWordFilter =  new ContentKeyWordFilter(PropertiesType.DDSHOW_QKD_TEST);
         Long a = System.currentTimeMillis();
-        System.out.println(contentKeyWordFilter.isSpamNickName("万部国.产日韩欧美制服动漫.看A.片.加微信 can664"));
+        System.out.println(contentKeyWordFilter.isSpamNickName("200元／2百万【星】币，500元\\/6百万【星】币【QQ】"));
         System.out.println(System.currentTimeMillis()-a);
        /* try {
                 String encoding="UTF-8";

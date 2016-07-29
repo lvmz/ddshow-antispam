@@ -38,11 +38,9 @@ public class UgcChat extends UgcLog {
     public String getCreateDate() {
         return createDate;
     }
-
     public void setCreateDate(String createDate) {
         this.createDate = createDate;
     }
-
     public void setAnchorLevel(int anchorLevel){
         this.anchorLevel = anchorLevel;
     }
@@ -55,7 +53,6 @@ public class UgcChat extends UgcLog {
     public String getContent(){
         return this.content;
     }
-
     public void setId(int id){
         this.id = id;
     }

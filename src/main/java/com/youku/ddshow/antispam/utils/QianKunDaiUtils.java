@@ -203,7 +203,7 @@ public class QianKunDaiUtils {
 
     public static void main(String[] args) {
         String url="http://10.100.23.57:80/hdp/kvstore/kv/";
-        int length=1000;
+        int length=200;
       /*  QkdParameter parameter=new QkdParameter();
         parameter.setAk("CuVEz/TxDu");
         parameter.setK("spamWordKey");
@@ -256,7 +256,7 @@ public class QianKunDaiUtils {
         List<Key> ks=new ArrayList<>();
         for(int i=0;i<length;i++){
             Key key=new Key();
-            key.setK("rediskey10_1"+"_"+(i));
+            key.setK("rediskey3_1"+"_"+(i));
             ks.add(key);
         }
         msgtParameter.setKs(ks);
