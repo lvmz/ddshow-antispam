@@ -62,7 +62,7 @@ public class UgcCommentAntiSpamByFrequency {
 
         //************************************线上用**************************************************
         if (args.length < 5) {
-            System.err.println("Usage: UgcCommentAntiSpam <token> <group> <topics> <numThreads> <master> <dutationg> <window> <split>");
+            System.err.println("Usage: UgcCommentAntiSpam <token> <group> <topics> <numThreads> <master> <dutationg> <window> <split> <role>");
             System.exit(1);
         }
 
@@ -71,6 +71,8 @@ public class UgcCommentAntiSpamByFrequency {
         final  Long contentThreshold = Long.parseLong(args[7]);
         final  Long commenterThreshold10hper1h = Long.parseLong(args[8]);
         final  Long contentThreshold10h10hper1h = Long.parseLong(args[9]);
+        final  String role = args[10];
+
         SparkConf sparkConf = new SparkConf().setAppName("UgcCommentAntiSpam").setExecutorEnv("file.encoding","UTF-8");
         // Create the context with 60 seconds batch size
 
@@ -126,7 +128,7 @@ public class UgcCommentAntiSpamByFrequency {
                     JSONObject dataJson = LogUtils.getUgcDataJson(strings.get(7));
                     if (dataJson.containsKey("userLevel"))
                     {
-                       if("0".equals(dataJson.getString("userLevel"))&&"129".equals(dataJson.getString("role")))
+                       if("0".equals(dataJson.getString("userLevel"))&&role.equals(dataJson.getString("role")))
                        {
                            return true;
                        }else
